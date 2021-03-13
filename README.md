@@ -39,8 +39,12 @@ Here we display the top 1 item from each table.
 * **`Top Artist 500`**: 500 with 4 fields
 
 ## 🎶 Flow Logic
-![](https://i.imgur.com/K10TkSo.png)
+### Graphic Representation
+* *Top 500 Artists and Top 100 Songs will also have an option to display rankings graphically (Weeks on Chart).*
+* *These are only samples to illustrate the flow of our program. They do not represent the final UI of our program.*
+![](https://i.imgur.com/g335cyp.png)
 
+### More detailed structure
 ```
 |-- Start: Rolling Stone Charts
     |
