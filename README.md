@@ -39,11 +39,7 @@ Here we display the top 1 item from each table.
 * **`Top Artist 500`**: 500 with 4 fields
 
 ## 🎶 Flow Logic
-![](https://i.imgur.com/tRpLwh1.png)
-
-* Top 200 album -> Pick search filters -> display ranking
-* Top 100 songs -> Pick search filters -> display ranking
-* Top 500 artists -> Pick search filters -> display ranking
+![](https://i.imgur.com/K10TkSo.png)
 
 ```
 |-- Start: Rolling Stone Charts
