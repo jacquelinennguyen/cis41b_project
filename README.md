@@ -12,10 +12,10 @@ Final Project for Nguyen CIS41B Winter 2021.
 
 Authors: [Fawaz Al-Harbi](https://github.com/monsieurCat), [Kaede Hamada](https://github.com/KaeMaple9), and [Jacqueline Nguyen](https://github.com/jacquelinennguyen).
 
-## Overview
+## 🎶 Overview
 This GUI application will allow the user to access 3 top charts on the Rolling Stones website. We use web scraping to get the data, store it in a database, and then from there the user can interact with the GUI to display the data in whatever sorted way they like.
 
-## Samples from the database
+## 🎶 Samples from the database
 Here we display the top 1 item from each table.
 
 ### Top 200 Albums
@@ -33,17 +33,17 @@ Here we display the top 1 item from each table.
 | --- | --- | --- | --- |
 | Drake | 167.7M | 317 | What’s Next |
 
-## What are the sizes of the tables? 
-Top 200 Albums: 200 with 7 fields
-Top 100 Songs: 100 with 5 fields
-Top Artist 500: 500 with 4 fields
+## 🎶 What are the sizes of the tables? 
+* **`Top 200 Albums`**: 200 with 7 fields
+* **`Top 100 Songs`**: 100 with 5 fields
+* **`Top Artist 500`**: 500 with 4 fields
 
-## Flow Logic
-Top 200 album -> Pick search filters -> display ranking
+## 🎶 Flow Logic
+![](https://i.imgur.com/tRpLwh1.png)
 
-Top 100 songs -> Pick search filters -> display ranking
-
-Top 500 artists -> Pick search filters -> display ranking
+* Top 200 album -> Pick search filters -> display ranking
+* Top 100 songs -> Pick search filters -> display ranking
+* Top 500 artists -> Pick search filters -> display ranking
 
 ```
 |-- Start: Rolling Stone Charts
