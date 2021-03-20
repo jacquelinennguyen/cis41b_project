@@ -60,8 +60,8 @@ Here we display the top 1 item from each table. (As of Friday, March 19)
 | Pop Smoke | 2 |
 
 ## 🎶 What are the sizes of the tables? 
-* **`Top 200 Albums`**: 200 with 7 fields
-* **`Top 100 Songs`**: 100 with 7 fields
+* **`Top 200 Albums`**: 200 with 9 fields
+* **`Top 100 Songs`**: 100 with 8 fields
 * **`Top Artist 500`**: 500 with 4 fields
 
 ## 🎶 Flow Logic
