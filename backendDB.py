@@ -98,15 +98,17 @@ def genTableAlbumsSongs(d1, d2, conn, cur) :
         cur.execute('''INSERT INTO Names (name) VALUES (?)''', (artist,))
         cur.execute('''SELECT id FROM Names WHERE name = ?''', (artist,))
         artist_id = cur.fetchone()[0]
+        
+        cities = ""
+        for i in range(len(v['topCities'])) :
+            city = v['topCities'][i]
+            s = f'{i+1} {city}\n'
+            cities += s
 
-        label = v['label']
-        if '/' in label :
-            label = label.replace('/',', ')
-        print(label)
         cur.execute('''INSERT INTO SongsDB
                 (name, artistId, unitsTrend, peakPosition, label, topCities, weeksOnChart, streams) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (k, artist_id, v['unitsTrend'], v['peakPosition'], str(label), v['topCities'], v['weeksOnChart'], v['songStreams']))
+                ''', (k, artist_id, v['unitsTrend'], v['peakPosition'], v['label'], cities, v['weeksOnChart'], v['songStreams']))
     
     conn.commit()
 
