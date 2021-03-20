@@ -3,18 +3,20 @@
 
 import requests
 from bs4 import BeautifulSoup
-import re
 import json
-import sqlite3
 import time
 import threading
 from datetime import date
 from datetime import datetime
 from dateutil.relativedelta import relativedelta, FR
 
+SONG_LIMIT = 100
+ALBUM_LIMIT = 200
+ARTIST_LIMIT = 500
+STEP_AMOUNT = 100
+
 dayToday = date.today().strftime("%d")
 lastFriday = datetime.now() + relativedelta(days=-1, weekday=FR(-2) if dayToday == "Fri" else FR(-1))
-# print(lastFriday)
 monthLetter = lastFriday.strftime("%b")
 monthNumber = lastFriday.strftime("%m")
 day = lastFriday.strftime("%d")
@@ -24,339 +26,388 @@ top100Songs = {}
 top200Albums = {}
 top500Artists = {}
 
-timerStart = time.time()
-# SONGS ===============================================================================================================
 
-# to get the first song of the chart ==========================================
-response = requests.get(f"https://www.rollingstone.com/charts/songs/{year}-{monthNumber}-{day}/")
-soup = BeautifulSoup(response.content, "lxml")
+# SONGS ================================================================================================================
 
-songName = soup.select_one("div.c-chart__table--title").text
+def scrapeSongsChart():
+    global top100Songs
 
-artist = soup.select_one("div.c-chart__table--caption").text
+    threadsList = []
+    rvList = []
 
-unitsTrend = soup.select_one("div.c-chart__table--linegraph")["data-trend-data"]
+    threadsList.append(threading.Thread(target=scrapeFirstSong, args=(rvList,)))
+    for startingCount in range(0, SONG_LIMIT - STEP_AMOUNT + 1, STEP_AMOUNT):
+        thread = threading.Thread(target=scrapeSongBatch, args=(startingCount, rvList))
+        threadsList.append(thread)
+    for thread in threadsList:
+        thread.start()
+    for thread in threadsList:
+        thread.join()
 
-peakPosition = soup.select_one("div.c-chart__table--stat-base.c-chart__table--peak span").text
-peakPosition = int(peakPosition) if peakPosition else None
+    sortedList = sorted(rvList, key=lambda x: x[0])
+    for dataTuple in sortedList:
+        top100Songs.update(dataTuple[1])
 
-weeksOnChart = soup.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-present span").text
-weeksOnChart = int(weeksOnChart) if weeksOnChart else None
 
-label = soup.select_one("span.c-chart__table--label-text").text
+def scrapeFirstSong(dataContainer):
+    response = requests.get(f"https://www.rollingstone.com/charts/songs/{year}-{monthNumber}-{day}/")
+    soup = BeautifulSoup(response.content, "lxml")
 
-topCities = []
-for liTag in soup.select("div.c-chart__table--bottom "
-                         "div.c-chart__table--cities "
-                         "li"):
-    topCities.append(liTag.text)
+    songName = soup.select_one("div.c-chart__table--title").text
 
-songStreams = soup.select_one("div.c-chart__table--stat-base.c-chart__table--song-streams span").text
-songStreams = songStreams.replace('B', 'e9')
-songStreams = songStreams.replace('M', 'e6')
-songStreams = songStreams.replace('K', 'e3')
-songStreams = float(songStreams) if songStreams else None
+    artist = soup.select_one("div.c-chart__table--caption").text
 
-# print(songName)
-# print(artist)
-# print(unitsTrend)
-# print(peakPosition)
-# print(weeksOnChart)
-# print(label)
-# print(topCities)
-# print(songStreams)
-# print()
+    unitsTrend = soup.select_one("div.c-chart__table--linegraph")["data-trend-data"]
 
-top100Songs[songName] = {"artist": artist,
-                         "unitsTrend": unitsTrend,
-                         "peakPosition": peakPosition,
-                         "weeksOnChart": weeksOnChart,
-                         "label": label,
-                         "topCities": topCities,
-                         "songStreams": songStreams}
-
-# to get the rest of the songs ================================================
-response = requests.get("https://www.rollingstone.com/wp-admin/admin-ajax.php?"
-                        "counter=0"
-                        "&chart=songs"
-                        "&results_per=100"
-                        f"&chart_date={monthLetter}%20{day}%2C%20{year}"
-                        "&is_eoy=0"
-                        "&eoy_year=0"
-                        "&action=rscharts_fetch_subchart")
-data = json.loads(response.content)["data"]
-soup = BeautifulSoup(data, "lxml")
-
-for elem in soup.select("section.l-section__charts.c-chart__table--single"):
-    songName = elem.select_one("div.c-chart__table--title").text
-
-    artist = elem.select_one("div.c-chart__table--caption").text
-
-    unitsTrend = elem.select_one("div.c-chart__table--linegraph")["data-trend-data"]
-
-    peakPosition = elem.select_one("div.c-chart__table--stat-base.c-chart__table--peak span").text
+    peakPosition = soup.select_one("div.c-chart__table--stat-base.c-chart__table--peak span").text
     peakPosition = int(peakPosition) if peakPosition else None
 
-    weeksOnChart = elem.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-present span").text
+    weeksOnChart = soup.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-present span").text
     weeksOnChart = int(weeksOnChart) if weeksOnChart else None
 
-    label = elem.select_one("span.c-chart__table--label-text").text
+    label = soup.select_one("span.c-chart__table--label-text").text
 
     topCities = []
-    for counter, liTag in enumerate(elem.select("div.c-chart__table--genre-label-cities "
-                                                "div.c-chart__table--cities "
-                                                "li"), start=1):
+    for liTag in soup.select("div.c-chart__table--bottom "
+                             "div.c-chart__table--cities "
+                             "li"):
         topCities.append(liTag.text)
 
-    songStreams = elem.select_one("div.c-chart__table--stat-base.c-chart__table--song-streams span").text
+    songStreams = soup.select_one("div.c-chart__table--stat-base.c-chart__table--song-streams span").text
     songStreams = songStreams.replace('B', 'e9')
     songStreams = songStreams.replace('M', 'e6')
     songStreams = songStreams.replace('K', 'e3')
     songStreams = float(songStreams) if songStreams else None
 
-    top100Songs[songName] = {"artist": artist,
-                             "unitsTrend": unitsTrend,
-                             "peakPosition": peakPosition,
-                             "weeksOnChart": weeksOnChart,
-                             "label": label,
-                             "topCities": topCities,
-                             "songStreams": songStreams}
+    firstData = {songName: {"artist": artist,
+                            "unitsTrend": unitsTrend,
+                            "peakPosition": peakPosition,
+                            "weeksOnChart": weeksOnChart,
+                            "label": label,
+                            "topCities": topCities,
+                            "songStreams": songStreams}}
 
-    # print(songName)
-    # print(artist)
-    # print(unitsTrend)
-    # print(peakPosition)
-    # print(weeksOnChart)
-    # print(label)
-    # print(topCities)
-    # print(songStreams)
-    # print()
+    dataToSendBack = (-1, firstData)
+    dataContainer.append(dataToSendBack)
+
+
+def scrapeSongBatch(counterStart, dataContainer):
+    songDataDict = {}
+    response = requests.get("https://www.rollingstone.com/wp-admin/admin-ajax.php?"
+                            f"counter={counterStart}"
+                            "&chart=songs"
+                            f"&results_per={STEP_AMOUNT}"
+                            f"&chart_date={monthLetter}%20{day}%2C%20{year}"
+                            "&is_eoy=0"
+                            "&eoy_year=0"
+                            "&action=rscharts_fetch_subchart")
+
+    data = json.loads(response.content)["data"]
+    soup = BeautifulSoup(data, "lxml")
+
+    for elem in soup.select("section.l-section__charts.c-chart__table--single"):
+        songName = elem.select_one("div.c-chart__table--title").text
+
+        artist = elem.select_one("div.c-chart__table--caption").text
+
+        unitsTrend = elem.select_one("div.c-chart__table--linegraph")["data-trend-data"]
+
+        peakPosition = elem.select_one("div.c-chart__table--stat-base.c-chart__table--peak span").text
+        peakPosition = int(peakPosition) if peakPosition else None
+
+        weeksOnChart = elem.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-present span").text
+        weeksOnChart = int(weeksOnChart) if weeksOnChart else None
+
+        label = elem.select_one("span.c-chart__table--label-text").text
+
+        topCities = []
+        for counter, liTag in enumerate(elem.select("div.c-chart__table--genre-label-cities "
+                                                    "div.c-chart__table--cities "
+                                                    "li"), start=1):
+            topCities.append(liTag.text)
+
+        songStreams = elem.select_one("div.c-chart__table--stat-base.c-chart__table--song-streams span").text
+        songStreams = songStreams.replace('B', 'e9')
+        songStreams = songStreams.replace('M', 'e6')
+        songStreams = songStreams.replace('K', 'e3')
+        songStreams = float(songStreams) if songStreams else None
+
+        songDataDict[songName] = {"artist": artist,
+                                  "unitsTrend": unitsTrend,
+                                  "peakPosition": peakPosition,
+                                  "weeksOnChart": weeksOnChart,
+                                  "label": label,
+                                  "topCities": topCities,
+                                  "songStreams": songStreams}
+
+    dataToSendBack = (counterStart, songDataDict)
+    dataContainer.append(dataToSendBack)
 
 
 # ALBUMS ===============================================================================================================
 
-# first the rank 1 album ======================================================
-response = requests.get(f"https://www.rollingstone.com/charts/albums/{year}-{monthNumber}-{day}/")
-soup = BeautifulSoup(response.content, "lxml")
+def scrapeAlbumsChart():
+    global top200Albums
 
-albumName = soup.select_one("div.c-chart__table--title").text
+    threadsList = []
+    rvList = []
 
-artist = soup.select_one("div.c-chart__table--caption").text
+    threadsList.append(threading.Thread(target=scrapeFirstAlbum, args=(rvList,)))
+    for startingCount in range(0, ALBUM_LIMIT - STEP_AMOUNT + 1, STEP_AMOUNT):
+        thread = threading.Thread(target=scrapeAlbumBatch, args=(startingCount, rvList))
+        threadsList.append(thread)
+    for thread in threadsList:
+        thread.start()
+    for thread in threadsList:
+        thread.join()
 
-albumUnits = soup.select_one("div.c-chart__table--stat-base.c-chart__table--album-units span").text
-albumUnits = albumUnits.replace('B', 'e9')
-albumUnits = albumUnits.replace('M', 'e6')
-albumUnits = albumUnits.replace('K', 'e3')
-albumUnits = float(albumUnits) if albumUnits else None
+    sortedList = sorted(rvList, key=lambda x: x[0])
+    for dataTuple in sortedList:
+        top200Albums.update(dataTuple[1])
 
-albumSales = soup.select_one("div.c-chart__table--stat-base.c-chart__table--album-sales span").text
-albumSales = albumSales.replace('B', 'e9')
-albumSales = albumSales.replace('M', 'e6')
-albumSales = albumSales.replace('K', 'e3')
-albumSales = float(albumSales) if albumSales else None
 
-songSales = soup.select_one("div.c-chart__table--stat-base.c-chart__table--song-sales span").text
-songSales = songSales.replace('B', 'e9')
-songSales = songSales.replace('M', 'e6')
-songSales = songSales.replace('K', 'e3')
-songSales = float(songSales) if songSales else None
+def scrapeFirstAlbum(dataContainer):
+    response = requests.get(f"https://www.rollingstone.com/charts/albums/{year}-{monthNumber}-{day}/")
+    soup = BeautifulSoup(response.content, "lxml")
 
-peakPosition = soup.select_one("div.c-chart__table--stat-base.c-chart__table--peak span").text
-peakPosition = int(peakPosition) if peakPosition else None
+    albumName = soup.select_one("div.c-chart__table--title").text
 
-weeksOnChart = soup.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-present span").text
-weeksOnChart = int(weeksOnChart) if weeksOnChart else None
+    artist = soup.select_one("div.c-chart__table--caption").text
 
-label = soup.select_one("span.c-chart__table--label-text").text
-
-topSongs = []
-for liTag in soup.select("div.c-chart__table--side div.c-chart__table--cities.c-chart__table--songs li"):
-    topSongs.append(liTag.text)
-
-songStreams = soup.select_one("div.c-chart__table--stat-base.c-chart__table--song-streams span").text
-songStreams = songStreams.replace('B', 'e9')
-songStreams = songStreams.replace('M', 'e6')
-songStreams = songStreams.replace('K', 'e3')
-songStreams = float(songStreams) if songStreams else None
-
-# print(albumName)
-# print(artist)
-# print(albumUnits)
-# print(albumSales)
-# print(songSales)
-# print(peakPosition)
-# print(weeksOnChart)
-# print(label)
-# print(topSongs)
-# print(songStreams)
-# print()
-
-top200Albums[albumName] = {"artist": artist,
-                           "albumUnits": albumUnits,
-                           "albumSales": albumSales,
-                           "songSales": songSales,
-                           "peakPosition": peakPosition,
-                           "weeksOnChart": weeksOnChart,
-                           "label": label,
-                           "topSongs": topSongs,
-                           "songStreams": songStreams}
-
-# for the rest of the albums ==================================================
-response = requests.get("https://www.rollingstone.com/wp-admin/admin-ajax.php?"
-                        "counter=0"
-                        "&chart=albums"
-                        "&results_per=100"
-                        f"&chart_date={monthLetter}%20{day}%2C%20{year}"
-                        "&is_eoy=0"
-                        "&eoy_year=0"
-                        "&action=rscharts_fetch_subchart")
-data = json.loads(response.content)["data"]
-soup = BeautifulSoup(data, "lxml")
-
-for elem in soup.select("section.l-section__charts.c-chart__table--single"):
-    albumName = elem.select_one("div.c-chart__table--title").text
-
-    artist = elem.select_one("div.c-chart__table--caption").text
-
-    albumUnits = elem.select_one("div.c-chart__table--stat-base.c-chart__table--album-units span").text
+    albumUnits = soup.select_one("div.c-chart__table--stat-base.c-chart__table--album-units span").text
     albumUnits = albumUnits.replace('B', 'e9')
     albumUnits = albumUnits.replace('M', 'e6')
     albumUnits = albumUnits.replace('K', 'e3')
     albumUnits = float(albumUnits) if albumUnits else None
 
-    albumSales = elem.select_one("div.c-chart__table--stat-base.c-chart__table--album-sales span").text
+    albumSales = soup.select_one("div.c-chart__table--stat-base.c-chart__table--album-sales span").text
     albumSales = albumSales.replace('B', 'e9')
     albumSales = albumSales.replace('M', 'e6')
     albumSales = albumSales.replace('K', 'e3')
     albumSales = float(albumSales) if albumSales else None
 
-    songSales = elem.select_one("div.c-chart__table--stat-base.c-chart__table--song-sales span").text
+    songSales = soup.select_one("div.c-chart__table--stat-base.c-chart__table--song-sales span").text
     songSales = songSales.replace('B', 'e9')
     songSales = songSales.replace('M', 'e6')
     songSales = songSales.replace('K', 'e3')
     songSales = float(songSales) if songSales else None
 
-    peakPosition = elem.select_one("div.c-chart__table--stat-base.c-chart__table--peak span").text
+    peakPosition = soup.select_one("div.c-chart__table--stat-base.c-chart__table--peak span").text
     peakPosition = int(peakPosition) if peakPosition else None
 
-    weeksOnChart = elem.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-present span").text
+    weeksOnChart = soup.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-present span").text
     weeksOnChart = int(weeksOnChart) if weeksOnChart else None
 
-    label = elem.select_one("span.c-chart__table--label-text").text
+    label = soup.select_one("span.c-chart__table--label-text").text
 
     topSongs = []
-    for liTag in elem.select("div.c-chart__table--middle div.c-chart__table--cities.c-chart__table--songs li"):
+    for liTag in soup.select("div.c-chart__table--side div.c-chart__table--cities.c-chart__table--songs li"):
         topSongs.append(liTag.text)
 
-    songStreams = elem.select_one("div.c-chart__table--stat-base.c-chart__table--song-streams span").text
+    songStreams = soup.select_one("div.c-chart__table--stat-base.c-chart__table--song-streams span").text
     songStreams = songStreams.replace('B', 'e9')
     songStreams = songStreams.replace('M', 'e6')
     songStreams = songStreams.replace('K', 'e3')
     songStreams = float(songStreams) if songStreams else None
 
-    # print(albumName)
-    # print(artist)
-    # print(albumUnits)
-    # print(albumSales)
-    # print(songSales)
-    # print(peakPosition)
-    # print(weeksOnChart)
-    # print(label)
-    # print(topSongs)
-    # print(songStreams)
-    # print()
+    firstData = {albumName: {"artist": artist,
+                             "albumUnits": albumUnits,
+                             "albumSales": albumSales,
+                             "songSales": songSales,
+                             "peakPosition": peakPosition,
+                             "weeksOnChart": weeksOnChart,
+                             "label": label,
+                             "topSongs": topSongs,
+                             "songStreams": songStreams}}
 
-    top200Albums[albumName] = {"artist": artist,
-                               "albumUnits": albumUnits,
-                               "albumSales": albumSales,
-                               "songSales": songSales,
-                               "peakPosition": peakPosition,
-                               "weeksOnChart": weeksOnChart,
-                               "label": label,
-                               "topSongs": topSongs,
-                               "songStreams": songStreams}
+    dataToSendBack = (-1, firstData)
+    dataContainer.append(dataToSendBack)
+
+
+def scrapeAlbumBatch(counterStart, dataContainer):
+    # for the rest of the albums ==================================================
+    albumDataDict = {}
+    response = requests.get("https://www.rollingstone.com/wp-admin/admin-ajax.php?"
+                            f"counter={counterStart}"
+                            "&chart=albums"
+                            f"&results_per={STEP_AMOUNT}"
+                            f"&chart_date={monthLetter}%20{day}%2C%20{year}"
+                            "&is_eoy=0"
+                            "&eoy_year=0"
+                            "&action=rscharts_fetch_subchart")
+    data = json.loads(response.content)["data"]
+    soup = BeautifulSoup(data, "lxml")
+
+    for elem in soup.select("section.l-section__charts.c-chart__table--single"):
+        albumName = elem.select_one("div.c-chart__table--title").text
+
+        artist = elem.select_one("div.c-chart__table--caption").text
+
+        albumUnits = elem.select_one("div.c-chart__table--stat-base.c-chart__table--album-units span").text
+        albumUnits = albumUnits.replace('B', 'e9')
+        albumUnits = albumUnits.replace('M', 'e6')
+        albumUnits = albumUnits.replace('K', 'e3')
+        albumUnits = float(albumUnits) if albumUnits else None
+
+        albumSales = elem.select_one("div.c-chart__table--stat-base.c-chart__table--album-sales span").text
+        albumSales = albumSales.replace('B', 'e9')
+        albumSales = albumSales.replace('M', 'e6')
+        albumSales = albumSales.replace('K', 'e3')
+        albumSales = float(albumSales) if albumSales else None
+
+        songSales = elem.select_one("div.c-chart__table--stat-base.c-chart__table--song-sales span").text
+        songSales = songSales.replace('B', 'e9')
+        songSales = songSales.replace('M', 'e6')
+        songSales = songSales.replace('K', 'e3')
+        songSales = float(songSales) if songSales else None
+
+        peakPosition = elem.select_one("div.c-chart__table--stat-base.c-chart__table--peak span").text
+        peakPosition = int(peakPosition) if peakPosition else None
+
+        weeksOnChart = elem.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-present span").text
+        weeksOnChart = int(weeksOnChart) if weeksOnChart else None
+
+        label = elem.select_one("span.c-chart__table--label-text").text
+
+        topSongs = []
+        for liTag in elem.select("div.c-chart__table--middle div.c-chart__table--cities.c-chart__table--songs li"):
+            topSongs.append(liTag.text)
+
+        songStreams = elem.select_one("div.c-chart__table--stat-base.c-chart__table--song-streams span").text
+        songStreams = songStreams.replace('B', 'e9')
+        songStreams = songStreams.replace('M', 'e6')
+        songStreams = songStreams.replace('K', 'e3')
+        songStreams = float(songStreams) if songStreams else None
+
+        albumDataDict[albumName] = {"artist": artist,
+                                    "albumUnits": albumUnits,
+                                    "albumSales": albumSales,
+                                    "songSales": songSales,
+                                    "peakPosition": peakPosition,
+                                    "weeksOnChart": weeksOnChart,
+                                    "label": label,
+                                    "topSongs": topSongs,
+                                    "songStreams": songStreams}
+    dataToSendBack = (counterStart, albumDataDict)
+    dataContainer.append(dataToSendBack)
 
 
 # ARTISTS ==============================================================================================================
 
-# for the rank 1 artist =======================================================
-response = requests.get(f"https://www.rollingstone.com/charts/artists/{year}-{monthNumber}-{day}/")
-soup = BeautifulSoup(response.content, "lxml")
+def scrapeArtistsChart():
+    global top500Artists
 
-artistName = soup.select_one("div.c-chart__table--title").text
+    threadsList = []
+    rvList = []
 
-songStreams = soup.select_one("div.c-chart__table--stat-base.c-chart__table--song-streams span").text
-songStreams = songStreams.replace('B', 'e9')
-songStreams = songStreams.replace('M', 'e6')
-songStreams = songStreams.replace('K', 'e3')
-songStreams = float(songStreams) if songStreams else None
+    threadsList.append(threading.Thread(target=scrapeFirstArtist, args=(rvList,)))
+    for startingCount in range(0, ARTIST_LIMIT - STEP_AMOUNT + 1, STEP_AMOUNT):
+        thread = threading.Thread(target=scrapeArtistsBatch, args=(startingCount, rvList))
+        threadsList.append(thread)
+    for thread in threadsList:
+        thread.start()
+    for thread in threadsList:
+        thread.join()
 
-weeksOnChart = soup.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-present span").text
-weeksOnChart = int(weeksOnChart) if weeksOnChart else None
-
-topSong = soup.select_one("div.c-chart__table--stat-base.c-chart__table--top-song span").text
-
-peakPosition = 1
-
-# print(artistName)
-# print(songStreams)
-# print(weeksOnChart)
-# print(topSong)
-# print(peakPosition)
-# print()
-
-top500Artists[artistName] = {"artistName": artistName,
-                             "songStreams": songStreams,
-                             "weeksOnChart": weeksOnChart,
-                             "weeksOnChart": weeksOnChart,
-                             "topSong": topSong,
-                             "peakPosition": peakPosition}
+    sortedList = sorted(rvList, key=lambda x: x[0])
+    for dataTuple in sortedList:
+        top500Artists.update(dataTuple[1])
 
 
-# for the rest of the artists =================================================
-response = requests.get("https://www.rollingstone.com/wp-admin/admin-ajax.php?"
-                        "counter=0"
-                        "&chart=artists"
-                        "&results_per=500"
-                        f"&chart_date={monthLetter}%20{day}%2C%20{year}"
-                        "&is_eoy=0"
-                        "&eoy_year=0"
-                        "&action=rscharts_fetch_subchart")
-data = json.loads(response.content)["data"]
-soup = BeautifulSoup(data, "lxml")
+def scrapeFirstArtist(dataContainer):
+    response = requests.get(f"https://www.rollingstone.com/charts/artists/{year}-{monthNumber}-{day}/")
+    soup = BeautifulSoup(response.content, "lxml")
 
-for elem in soup.select("section.l-section__charts.c-chart__table--single"):
-    artistName = elem.select_one("div.c-chart__table--title").text
+    artistName = soup.select_one("div.c-chart__table--title").text
 
-    songStreams = elem.select_one("div.c-chart__table--stat-base.c-chart__table--song-streams span").text
+    songStreams = soup.select_one("div.c-chart__table--stat-base.c-chart__table--song-streams span").text
     songStreams = songStreams.replace('B', 'e9')
     songStreams = songStreams.replace('M', 'e6')
     songStreams = songStreams.replace('K', 'e3')
     songStreams = float(songStreams) if songStreams else None
 
-    weeksOnChart = elem.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-present span").text
+    weeksOnChart = soup.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-present span").text
     weeksOnChart = int(weeksOnChart) if weeksOnChart else None
 
-    topSong = elem.select_one("div.c-chart__table--stat-base.c-chart__table--top-song span").text
+    topSong = soup.select_one("div.c-chart__table--stat-base.c-chart__table--top-song span").text
 
-    peakPosition = elem.select_one("div.c-chart__table--stat-base.c-chart__table--peak span").text
-    peakPosition = int(peakPosition) if peakPosition else None
+    peakPosition = 1
 
-    # print(artistName)
-    # print(songStreams)
-    # print(weeksOnChart)
-    # print(topSong)
-    # print(peakPosition)
-    # print()
+    firstData = {artistName: {"artistName": artistName,
+                              "songStreams": songStreams,
+                              "weeksOnChart": weeksOnChart,
+                              "topSong": topSong,
+                              "peakPosition": peakPosition}}
 
-    top500Artists[artistName] = {"artistName": artistName,
-                                 "songStreams": songStreams,
-                                 "weeksOnChart": weeksOnChart,
-                                 "weeksOnChart": weeksOnChart,
-                                 "topSong": topSong,
-                                 "peakPosition": peakPosition}
+    dataToSendBack = (-1, firstData)
+    dataContainer.append(dataToSendBack)
 
+
+def scrapeArtistsBatch(counterStart, dataContainer):
+    artistDataDict = {}
+    # for the rest of the artists =================================================
+    response = requests.get("https://www.rollingstone.com/wp-admin/admin-ajax.php?"
+                            f"counter={counterStart}"
+                            "&chart=artists"
+                            f"&results_per={STEP_AMOUNT}"
+                            f"&chart_date={monthLetter}%20{day}%2C%20{year}"
+                            "&is_eoy=0"
+                            "&eoy_year=0"
+                            "&action=rscharts_fetch_subchart")
+    data = json.loads(response.content)["data"]
+    soup = BeautifulSoup(data, "lxml")
+
+    for elem in soup.select("section.l-section__charts.c-chart__table--single"):
+        artistName = elem.select_one("div.c-chart__table--title").text
+
+        songStreams = elem.select_one("div.c-chart__table--stat-base.c-chart__table--song-streams span").text
+        songStreams = songStreams.replace('B', 'e9')
+        songStreams = songStreams.replace('M', 'e6')
+        songStreams = songStreams.replace('K', 'e3')
+        songStreams = float(songStreams) if songStreams else None
+
+        weeksOnChart = elem.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-present span").text
+        weeksOnChart = int(weeksOnChart) if weeksOnChart else None
+
+        topSong = elem.select_one("div.c-chart__table--stat-base.c-chart__table--top-song span").text
+
+        peakPosition = elem.select_one("div.c-chart__table--stat-base.c-chart__table--peak span").text
+        peakPosition = int(peakPosition) if peakPosition else None
+
+        artistDataDict[artistName] = {"artistName": artistName,
+                                      "songStreams": songStreams,
+                                      "weeksOnChart": weeksOnChart,
+                                      "topSong": topSong,
+                                      "peakPosition": peakPosition}
+
+    dataToSendBack = (counterStart, artistDataDict)
+    dataContainer.append(dataToSendBack)
+
+
+# running the functions ================================================================================================
+
+# threading ===================================================================
+scrapingFunctions = [scrapeSongsChart, scrapeAlbumsChart, scrapeArtistsChart]
+masterThreadsList = []
+for function in scrapingFunctions:
+    thread1 = threading.Thread(target=function)
+    masterThreadsList.append(thread1)
+
+print("starting timer")
+timerStart = time.time()
+for thread1 in masterThreadsList:
+    thread1.start()
+for thread1 in masterThreadsList:
+    thread1.join()
 totalTime = time.time() - timerStart
 print(f"Time to fetch data: {totalTime:.2f}s")
 
-
+# in sequence =================================================================
+# timerStart = time.time()
+#
+# scrapeSongsChart()
+# scrapeAlbumsChart()
+# scrapeArtistsChart()
+#
+# totalTime = time.time() - timerStart
+# print(f"Time to fetch data: {totalTime:.2f}s")
