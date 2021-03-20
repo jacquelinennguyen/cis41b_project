@@ -3,13 +3,9 @@
 
 import requests
 from bs4 import BeautifulSoup
-import re
 import json
-import sqlite3
 import time
-import queue
 import threading
-from collections import ChainMap
 from datetime import date
 from datetime import datetime
 from dateutil.relativedelta import relativedelta, FR
