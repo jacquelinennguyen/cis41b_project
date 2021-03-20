@@ -17,8 +17,11 @@ This GUI application will allow the user to access 3 top charts on the Rolling S
 
 ## 🎶 Contents
 🎸 Media - images
+
 🎸 backendWebScraper - gets all the data from 3 Top charts from the Rolling Stones website
+
 🎸 backendDB - converts the dictionaries from backendWebScrapper into a SQL database
+
 🎸 GUI.py - frontend of the program
 
 ## 🎶 Samples from the database
