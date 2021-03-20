@@ -19,6 +19,7 @@ top100Songs = {}
 top200Albums = {}
 top500Artists = {}
 
+
 # SONGS ===============================================================================================================
 
 # to get the first song of the chart ==========================================
@@ -126,11 +127,10 @@ for elem in soup.select("section.l-section__charts.c-chart__table--single"):
     # print(songStreams)
     # print()
 
-# print(len(top100))
 
 # ALBUMS ===============================================================================================================
 
-# to get the first song of the chart ==========================================
+# first the rank 1 album ======================================================
 response = requests.get(f"https://www.rollingstone.com/charts/albums/{year}-{monthNumber}-{day}/")
 soup = BeautifulSoup(response.content, "lxml")
 
@@ -196,7 +196,7 @@ top200Albums[albumName] = {"artist": artist,
                            "topSongs": topSongs,
                            "songStreams": songStreams}
 
-# to get the rest of the songs ================================================
+# for the rest of the albums ==================================================
 response = requests.get("https://www.rollingstone.com/wp-admin/admin-ajax.php?"
                         "counter=0"
                         "&chart=albums"
@@ -271,9 +271,10 @@ for elem in soup.select("section.l-section__charts.c-chart__table--single"):
                                "topSongs": topSongs,
                                "songStreams": songStreams}
 
+
 # ARTISTS ==============================================================================================================
 
-# to get the first song of the chart ==========================================
+# for the rank 1 artist =======================================================
 response = requests.get(f"https://www.rollingstone.com/charts/artists/{year}-{monthNumber}-{day}/")
 soup = BeautifulSoup(response.content, "lxml")
 
@@ -290,16 +291,14 @@ weeksOnChart = int(weeksOnChart) if weeksOnChart else None
 
 topSong = soup.select_one("div.c-chart__table--stat-base.c-chart__table--top-song span").text
 
-# weeksAtOne = soup.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-one span").text
-# weeksAtOne = int(weeksAtOne) if weeksAtOne else None
 peakPosition = 1
 
-print(artistName)
-print(songStreams)
-print(weeksOnChart)
-print(topSong)
-print(peakPosition)
-print()
+# print(artistName)
+# print(songStreams)
+# print(weeksOnChart)
+# print(topSong)
+# print(peakPosition)
+# print()
 
 top500Artists[artistName] = {"artistName": artistName,
                              "songStreams": songStreams,
@@ -308,7 +307,8 @@ top500Artists[artistName] = {"artistName": artistName,
                              "topSong": topSong,
                              "peakPosition": peakPosition}
 
-# to get the rest of the songs ================================================
+
+# for the rest of the artists =================================================
 response = requests.get("https://www.rollingstone.com/wp-admin/admin-ajax.php?"
                         "counter=0"
                         "&chart=artists"
@@ -337,12 +337,12 @@ for elem in soup.select("section.l-section__charts.c-chart__table--single"):
     peakPosition = elem.select_one("div.c-chart__table--stat-base.c-chart__table--peak span").text
     peakPosition = int(peakPosition) if peakPosition else None
 
-    print(artistName)
-    print(songStreams)
-    print(weeksOnChart)
-    print(topSong)
-    print(peakPosition)
-    print()
+    # print(artistName)
+    # print(songStreams)
+    # print(weeksOnChart)
+    # print(topSong)
+    # print(peakPosition)
+    # print()
 
     top500Artists[artistName] = {"artistName": artistName,
                                  "songStreams": songStreams,
