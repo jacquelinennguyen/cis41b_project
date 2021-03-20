@@ -1,4 +1,4 @@
-# Convert to JSON and then to database.
+# Convert to database.
 # Should be 4 tables:
 # 1: artist name key
 # 2: Top 100 Songs
@@ -8,6 +8,7 @@
 from backendWebScraper import top500Artists, top200Albums, top100Songs
 import json
 import sqlite3
+import re
 
 conn = sqlite3.connect('rollingstones.db')
 cur = conn.cursor()
@@ -17,7 +18,7 @@ cur = conn.cursor()
 def genTableArtists(d, conn, cur) :
     cur.execute("DROP TABLE IF EXISTS ArtistsDB")      
     cur.execute('''CREATE TABLE ArtistsDB(             
-                   name TEXT PRIMARY KEY,
+                   name TEXT NOT NULL UNIQUE,
                    songStreams INTEGER,
                    weeksOnChart INTEGER,
                    topSong TEXT,
@@ -41,19 +42,78 @@ top200Albums[albumName] = {"artist": artist,
                                "topSongs": topSongs,
                                "songStreams": songStreams}
 '''
-def genTableAlbums(d, conn, cur) :
+def genTableAlbumsSongs(d1, d2, conn, cur) :
     cur.execute('DROP TABLE IF EXISTS AlbumsDB')
-    cur.execute('''CREATE TABLE AlbumsSB(
-                    artistId NOT NULL INTEGER PRIMARY KEY UNIQUE,
+    cur.execute('''CREATE TABLE AlbumsDB(
+                    name TEXT PRIMARY KEY,
+                    artistId INTEGER,
                     albumSales INTEGER,
-                    songSales INTEGER
+                    songSales INTEGER,
                     peakPosition INTEGER,
                     weeksOnChart INTEGER,
-                    label TEXT,
                     topSongs TEXT,
+                    label TEXT,
                     songStreams INTEGER
                     )
                     ''')
 
+    cur.execute('DROP TABLE IF EXISTS SongsDB')
+    cur.execute('''CREATE TABLE SongsDB(
+            name TEXT PRIMARY KEY,
+            artistId INTEGER,
+            unitsTrend INTEGER,
+            peakPosition INTEGER,
+            label TEXT,
+            topCities TEXT,
+            weeksOnChart INTEGER,
+            streams INTEGER
+            )''')
+
+    cur.execute('DROP TABLE IF EXISTS Names')
+    cur.execute('''CREATE TABLE Names(
+        id INTEGER NOT NULL PRIMARY KEY,
+        name TEXT UNIQUE ON CONFLICT IGNORE
+    )
+    ''')
+
+    for k, v in d2.items() :
+        artist = v['artist']
+        artist = re.sub(r'feat\..*', '', artist).rstrip()
+        cur.execute('''INSERT INTO Names (name) VALUES (?)''', (artist,))
+        cur.execute('''SELECT id FROM Names WHERE name = ?''', (artist,))
+        artist_id = cur.fetchone()[0]
+        #print(k)
+        topSongs = v['topSongs']
+        topSongs = ", ".join(topSongs)
+        #print(topSongs)
+        cur.execute('''INSERT INTO AlbumsDB
+                (name, artistId, albumSales, songSales, peakPosition, weeksOnChart, label, topSongs, songStreams) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (k, artist_id, v['albumSales'], v['songSales'], v['peakPosition'], v['weeksOnChart'], v['label'], topSongs, v['songStreams']))
+    conn.commit()
+    for k, v in d1.items() :
+        artist = v['artist']
+        artist = re.sub(r'feat\..*', '', artist).rstrip()
+        #print(artist)
+        cur.execute('''INSERT INTO Names (name) VALUES (?)''', (artist,))
+        cur.execute('''SELECT id FROM Names WHERE name = ?''', (artist,))
+        artist_id = cur.fetchone()[0]
+
+        label = v['label']
+        if '/' in label :
+            label = label.replace('/',', ')
+        print(label)
+        cur.execute('''INSERT INTO SongsDB
+                (name, artistId, unitsTrend, peakPosition, label, topCities, weeksOnChart, streams) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (k, artist_id, v['unitsTrend'], v['peakPosition'], str(label), v['topCities'], v['weeksOnChart'], v['songStreams']))
+    
+    conn.commit()
+
+
 
 #genTableArtists(top500Artists, conn, cur)
+genTableAlbumsSongs(top100Songs, top200Albums, conn, cur)
+
+#print(top100Songs['drivers license'])
+#print(top200Albums['Future Nostalgia'])
