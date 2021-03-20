@@ -406,18 +406,6 @@ for thread1 in masterThreadsList:
 totalTime = time.time() - timerStart
 print(f"Time to fetch data: {totalTime:.2f}s")
 
-# for k in top100Songs.keys():
-#     print(k)
-print(len(top100Songs))
-print()
-# for k in top200Albums.keys():
-#     print(k)
-print(len(top200Albums))
-print()
-# for k in top500Artists.keys():
-#     print(k)
-print(len(top500Artists))
-
 # in sequence =================================================================
 # timerStart = time.time()
 #
