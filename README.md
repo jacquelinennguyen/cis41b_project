@@ -22,17 +22,17 @@ As for the Top 500 Artists table, that table is sorted by the number of total st
 To view any of the tables used in this application, click [here](https://www.rollingstone.com/charts/).
 
 ## 🎶 Contents
-|
+
 |--🎸  **`Media`** - images
-|
+
 |--🎸  **`backendWebScraper.py`** - gets all the data from 3 Top charts from the Rolling Stones website
-|
+
 |--🎸  **`backendDB.py`** - converts the dictionaries from backendWebScrapper into a SQL database
-|
+
 |--🎸  **`backendQuery.py`** - functions that make SQL queries for the sorting aspect of the program
-|
+
 |--🎸  **`GUI.py`** - frontend of the program
-|
+
 |--🎸  **`rollingstones.db`** - Contains 4 Tables (Top 500 Artists, Top 200 Albums, Top 100 Songs, Artist Name Keys). Pictured below.
 
 ## 🎶 Samples from the database
