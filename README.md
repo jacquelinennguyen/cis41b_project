@@ -15,18 +15,25 @@ Authors: [Fawaz Al-Harbi](https://github.com/monsieurCat), [Kaede Hamada](https:
 ## 🎶 Overview
 This GUI application will allow the user to access 3 top charts on the Rolling Stones website. We use web scraping to get the data, store it in a database, and then from there the user can interact with the GUI to display the data in whatever sorted way they like.
 
+The Top 200 Albums and Top 100 Songs charts on the Rolling Stones website that we used here are sorted by a weighted Units score that accounts for sales and streams for that particular item. So the AlbumsDB Table in our database is sorted by default by the Album Units and the SongsDB Table is sorted by the Song Units.
+
+As for the Top 500 Artists table, that table is sorted by the number of total streams the artists have accumulated.
+
+To view any of the tables used in this application, click [here](https://www.rollingstone.com/charts/).
+
 ## 🎶 Contents
-🎸  **`Media`** - images
-
-🎸  **`backendWebScraper.py`** - gets all the data from 3 Top charts from the Rolling Stones website
-
-🎸  **`backendDB.py`** - converts the dictionaries from backendWebScrapper into a SQL database
-
-🎸  **`backendQuery.py`** - functions that make SQL queries for the sorting aspect of the program
-
-🎸  **`GUI.py`** - frontend of the program
-
-🎸  **`rollingstones.db`** - Contains 4 Tables (Top 500 Artists, Top 200 Albums, Top 100 Songs, Artist Name Keys). Pictured below.
+|
+|--🎸  **`Media`** - images
+|
+|--🎸  **`backendWebScraper.py`** - gets all the data from 3 Top charts from the Rolling Stones website
+|
+|--🎸  **`backendDB.py`** - converts the dictionaries from backendWebScrapper into a SQL database
+|
+|--🎸  **`backendQuery.py`** - functions that make SQL queries for the sorting aspect of the program
+|
+|--🎸  **`GUI.py`** - frontend of the program
+|
+|--🎸  **`rollingstones.db`** - Contains 4 Tables (Top 500 Artists, Top 200 Albums, Top 100 Songs, Artist Name Keys). Pictured below.
 
 ## 🎶 Samples from the database
 Here we display the top 1 item from each table. (As of Friday, March 19)

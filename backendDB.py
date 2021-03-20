@@ -114,6 +114,6 @@ def updateDB() :
     genTableArtists(top500Artists, conn, cur)
     genTableAlbumsSongs(top100Songs, top200Albums, conn, cur)
 
-updateDB()
+#updateDB()
 #print(top100Songs['drivers license'])
 #print(top200Albums['Future Nostalgia'])
