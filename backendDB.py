@@ -107,46 +107,6 @@ def genTableAlbumsSongs(d1, d2, conn, cur) :
     
     conn.commit()
 
-def albumsDefault() :
-    '''
-    returns the album names and album artists from the Top 200 Albums (default)
-    (AlbumName, AlbumArtist)
-    '''
-    L = []
-    for t in cur.execute('''SELECT AlbumsDB.name, Names.name FROM AlbumsDB JOIN Names ON AlbumsDB.artistId = Names.id
-                            WHERE Names.id = AlbumsDB.artistId
-                            ''') :
-        L.append(t)
-    return L
-
-def songsDefault() :
-    '''
-    returns the names of the Top 100 Songs (default)
-    '''
-    L = []
-    for t in cur.execute('''SELECT SongsDB.name, Names.name FROM SongsDB 
-                            JOIN Names on SongsDB.artistId = Names.id
-                            WHERE Names.id = SongsDB.artistId''') :
-        L.append(t)
-    return L
-
-def artistsDefault() :
-    '''
-    returns the names of the Top 500 Artists (default)
-    '''
-    L = []
-    for t in cur.execute('''SELECT name FROM ArtistsDB
-                                ORDER BY songStreams DESC''') :
-        L.append(t[0])
-    return L
-
-conn = sqlite3.connect('rollingstones.db')
-cur = conn.cursor()
-
-#print(albumsDefault()[0])
-#print(songsDefault()[0])
-print(artistsDefault())
-
 #genTableArtists(top500Artists, conn, cur)
 #genTableAlbumsSongs(top100Songs, top200Albums, conn, cur)
 
