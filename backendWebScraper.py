@@ -1,3 +1,6 @@
+# Name: Fawaz Al-Harbi
+# Implementation file for the web scraping part of the backend of the TopCharts program
+
 import requests
 from bs4 import BeautifulSoup
 import re

@@ -45,7 +45,7 @@ top200Albums[albumName] = {"artist": artist,
 def genTableAlbumsSongs(d1, d2, conn, cur) :
     cur.execute('DROP TABLE IF EXISTS AlbumsDB')
     cur.execute('''CREATE TABLE AlbumsDB(
-                    name TEXT,
+                    name TEXT NOT NULL,
                     artistId INTEGER,
                     albumSales INTEGER,
                     songSales INTEGER,
@@ -59,7 +59,7 @@ def genTableAlbumsSongs(d1, d2, conn, cur) :
 
     cur.execute('DROP TABLE IF EXISTS SongsDB')
     cur.execute('''CREATE TABLE SongsDB(
-            name TEXT,
+            name TEXT NOT NULL,
             artistId INTEGER,
             unitsTrend INTEGER,
             peakPosition INTEGER,
