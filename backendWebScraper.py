@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup
 import re
 import json
 import sqlite3
+import time
+import threading
 from datetime import date
 from datetime import datetime
 from dateutil.relativedelta import relativedelta, FR
@@ -19,7 +21,7 @@ top100Songs = {}
 top200Albums = {}
 top500Artists = {}
 
-
+timerStart = time.time()
 # SONGS ===============================================================================================================
 
 # to get the first song of the chart ==========================================
@@ -165,7 +167,7 @@ weeksOnChart = int(weeksOnChart) if weeksOnChart else None
 label = soup.select_one("span.c-chart__table--label-text").text
 
 topSongs = []
-for liTag in soup.select("div.c-chart__table--cities.c-chart__table--songs li"):
+for liTag in soup.select("div.c-chart__table--side div.c-chart__table--cities.c-chart__table--songs li"):
     topSongs.append(liTag.text)
 
 songStreams = soup.select_one("div.c-chart__table--stat-base.c-chart__table--song-streams span").text
@@ -240,7 +242,7 @@ for elem in soup.select("section.l-section__charts.c-chart__table--single"):
     label = elem.select_one("span.c-chart__table--label-text").text
 
     topSongs = []
-    for liTag in elem.select("div.c-chart__table--cities.c-chart__table--songs li"):
+    for liTag in elem.select("div.c-chart__table--middle div.c-chart__table--cities.c-chart__table--songs li"):
         topSongs.append(liTag.text)
 
     songStreams = elem.select_one("div.c-chart__table--stat-base.c-chart__table--song-streams span").text
@@ -350,3 +352,8 @@ for elem in soup.select("section.l-section__charts.c-chart__table--single"):
                                  "weeksOnChart": weeksOnChart,
                                  "topSong": topSong,
                                  "peakPosition": peakPosition}
+
+totalTime = time.time() - timerStart
+print(f"Time to fetch data: {totalTime:.2f}s")
+
+
