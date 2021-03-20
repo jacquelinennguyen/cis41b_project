@@ -18,10 +18,10 @@ class Album(Chart) :
     def albumsDefault(self) :
         '''
         returns the album names and album artists from the Top 200 Albums (default, album units)
-        (AlbumName, AlbumArtist)
+        (AlbumName, AlbumArtist, AlbumUnits)
         '''
         L = []
-        for t in self.cur.execute('''SELECT AlbumsDB.name, Names.name FROM AlbumsDB JOIN Names ON AlbumsDB.artistId = Names.id
+        for t in self.cur.execute('''SELECT AlbumsDB.name, Names.name, AlbumsDB.albumUnits FROM AlbumsDB JOIN Names ON AlbumsDB.artistId = Names.id
                                 WHERE Names.id = AlbumsDB.artistId
                                 ''') :
             L.append(t)
@@ -129,6 +129,7 @@ class Song(Chart) :
         '''
         returns the songs sorted by the sale units
         '''
+        return self.songsDefault()
 
 
 class Artist(Chart) :
@@ -157,3 +158,9 @@ class Artist(Chart) :
                                 ORDER BY weeksOnChart DESC''') :
             L.append(t)
         return L
+
+'''
+s = Song()
+for t in s.songsDefault() :
+    print(t[2])
+'''

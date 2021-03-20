@@ -42,6 +42,7 @@ def genTableAlbumsSongs(d1, d2, conn, cur) :
     cur.execute('''CREATE TABLE AlbumsDB(
                     name TEXT NOT NULL,
                     artistId INTEGER,
+                    albumUnits INTEGER,
                     albumSales INTEGER,
                     songSales INTEGER,
                     peakPosition INTEGER,
@@ -82,9 +83,9 @@ def genTableAlbumsSongs(d1, d2, conn, cur) :
         topSongs = ", ".join(topSongs)
         #print(topSongs)
         cur.execute('''INSERT INTO AlbumsDB
-                (name, artistId, albumSales, songSales, peakPosition, weeksOnChart, label, topSongs, songStreams) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (k, artist_id, v['albumSales'], v['songSales'], v['peakPosition'], v['weeksOnChart'], v['label'], topSongs, v['songStreams']))
+                (name, artistId, albumUnits, albumSales, songSales, peakPosition, weeksOnChart, label, topSongs, songStreams) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (k, artist_id, v['albumUnits'], v['albumSales'], v['songSales'], v['peakPosition'], v['weeksOnChart'], v['label'], topSongs, v['songStreams']))
     conn.commit()
     for k, v in d1.items() :
         artist = v['artist']
@@ -107,8 +108,12 @@ def genTableAlbumsSongs(d1, d2, conn, cur) :
     
     conn.commit()
 
-#genTableArtists(top500Artists, conn, cur)
-#genTableAlbumsSongs(top100Songs, top200Albums, conn, cur)
+def updateDB() :
+    conn = sqlite3.connect('rollingstones.db')
+    cur = conn.cursor()
+    genTableArtists(top500Artists, conn, cur)
+    genTableAlbumsSongs(top100Songs, top200Albums, conn, cur)
 
+updateDB()
 #print(top100Songs['drivers license'])
 #print(top200Albums['Future Nostalgia'])
