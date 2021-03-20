@@ -16,13 +16,15 @@ Authors: [Fawaz Al-Harbi](https://github.com/monsieurCat), [Kaede Hamada](https:
 This GUI application will allow the user to access 3 top charts on the Rolling Stones website. We use web scraping to get the data, store it in a database, and then from there the user can interact with the GUI to display the data in whatever sorted way they like.
 
 ## 🎶 Contents
-🎸 Media - images
+🎸  **`Media`** - images
 
-🎸 backendWebScraper - gets all the data from 3 Top charts from the Rolling Stones website
+🎸  **`backendWebScraper`** - gets all the data from 3 Top charts from the Rolling Stones website
 
-🎸 backendDB - converts the dictionaries from backendWebScrapper into a SQL database
+🎸  **`backendDB`** - converts the dictionaries from backendWebScrapper into a SQL database
 
-🎸 GUI.py - frontend of the program
+🎸  **`GUI.py`** - frontend of the program
+
+🎸  **`rollingstones.db`** - Contains 4 Tables (Top 500 Artists, Top 200 Albums, Top 100 Songs, Artist Name Keys). Pictured below.
 
 ## 🎶 Samples from the database
 Here we display the top 1 item from each table. (As of Friday, March 19)
