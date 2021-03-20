@@ -1,3 +1,5 @@
+# Jacqueline Nguyen
+
 # Convert to database.
 # Should be 4 tables:
 # 1: artist name key
@@ -16,6 +18,9 @@ cur = conn.cursor()
 #print(top500Artists['Taylor Swift'])
 
 def genTableArtists(d, conn, cur) :
+    '''
+    Generate table for Top 500 Artists.
+    '''
     cur.execute("DROP TABLE IF EXISTS ArtistsDB")      
     cur.execute('''CREATE TABLE ArtistsDB(             
                    name TEXT NOT NULL UNIQUE,
@@ -31,18 +36,13 @@ def genTableArtists(d, conn, cur) :
                         (k, v['songStreams'], v['weeksOnChart'], v['topSong'], v['peakPosition']))
     conn.commit()
 
-'''
-top200Albums[albumName] = {"artist": artist,
-                               "albumUnits": albumUnits,
-                               "albumSales": albumSales,
-                               "songSales": songSales,
-                               "peakPosition": peakPosition,
-                               "weeksOnChart": weeksOnChart,
-                               "label": label,
-                               "topSongs": topSongs,
-                               "songStreams": songStreams}
-'''
 def genTableAlbumsSongs(d1, d2, conn, cur) :
+    '''
+    Generate :
+    1)  Top 200 Albums Table
+    2)  Top 100 Songs Table
+    3)  Artist Name Key Table
+    '''
     cur.execute('DROP TABLE IF EXISTS AlbumsDB')
     cur.execute('''CREATE TABLE AlbumsDB(
                     name TEXT NOT NULL,
