@@ -6,6 +6,10 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 # import tkinter.messagebox as tkmb
 import sqlite3
+from PIL import ImageTk, Image
+import os
+import requests
+import urllib
 
 
 class MainWindow(tk.Tk):
@@ -73,12 +77,13 @@ class MainWindow(tk.Tk):
                 else:
                 '''
             else:
+                print(self.artist_cols)    # list of 6 column names
                 field1 = self.artist_cols[0]
+                field3 = self.artist_cols[-1]    # TEST; field3 should be coverImg
                 if self.choice == 0:
                     field2 = self.artist_cols[1]
-                    self.cur.execute('''SELECT ArtistsDB.%s, ArtistsDB.%s 
-                                        FROM ArtistsDB ORDER BY %s DESC'''
-                                     % (field1, field2, field2))
+                    self.cur.execute('''SELECT *
+                                        FROM ArtistsDB''')
                 elif self.choice == 1:
                     '''
                     '''
@@ -126,17 +131,41 @@ class ListBoxWindow(tk.Toplevel):
     def __init__(self, master, title, data):
         """ Constructor: Set up a list box window """
         super().__init__(master)
+        print(data)
+        self.focus_set()
         self.data = data
         self.title(title)
         tk.Label(self).grid(row=0, column=0)
         s = tk.Scrollbar(self)
         self.lb = tk.Listbox(self, height=10, width=45, yscrollcommand=s.set)
         for rank, one_data in enumerate(data, 1):
-            self.lb.insert(tk.END, "%3d. %s: %d" % (rank, one_data[0], one_data[1]))
+            self.lb.insert(tk.END, "%3d. %s" % (rank, one_data[0]))
         s.config(command=self.lb.yview)
-        self.lb.grid(row=1, column=0)
-        s.grid(row=1, column=1, sticky='ns')
+        self.lb.grid(row=0, column=0, rowspan=3)
+        s.grid(row=0, column=1, sticky='ns')
         tk.Label(self).grid(row=2, column=0)
+
+        # START OF TEST CODE
+        artist_name = tk.StringVar()
+        name_label = tk.Label(self, textvariable=artist_name, font=('Helvetica', 24, 'bold'), relief="ridge")
+        name_label.grid(row=0, column=3, sticky="n")
+        self.lb.bind("<<ListboxSelect>>", lambda event: self.show_record(artist_name))
+
+    def show_record(self, artist_name):
+        selection = self.lb.curselection()[0]
+
+        # loads image from server
+        img_url = self.data[selection][-1]
+        image = Image.open(urllib.request.urlopen(img_url))
+        image = image.resize((100, 100), Image.ANTIALIAS)
+        width, height = image.size
+        image = ImageTk.PhotoImage(image)
+        panel = tk.Label(self, image=image, relief="raised")
+        panel.image = image
+        panel.grid(row=0, column=2, sticky="n")
+
+        # display metrics
+        artist_name.set(self.data[selection][0])
 
 
 class BarChartWindow(tk.Toplevel):
