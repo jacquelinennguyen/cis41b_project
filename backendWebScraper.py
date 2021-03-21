@@ -60,10 +60,16 @@ def scrapeFirstSong(dataContainer):
     unitsTrend = soup.select_one("div.c-chart__table--linegraph")["data-trend-data"]
 
     peakPosition = soup.select_one("div.c-chart__table--stat-base.c-chart__table--peak span").text
-    peakPosition = int(peakPosition) if peakPosition else None
+    try:
+        peakPosition = int(peakPosition)
+    except ValueError:
+        peakPosition = None
 
     weeksOnChart = soup.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-present span").text
-    weeksOnChart = int(weeksOnChart) if weeksOnChart else None
+    try:
+        weeksOnChart = int(weeksOnChart)
+    except ValueError:
+        weeksOnChart = None
 
     label = soup.select_one("span.c-chart__table--label-text").text
 
@@ -79,13 +85,19 @@ def scrapeFirstSong(dataContainer):
     songStreams = songStreams.replace('K', 'e3')
     songStreams = float(songStreams) if songStreams else None
 
+    try:
+        coverImg = soup.select_one("img.c-chart__table--cover")["src"]
+    except TypeError:
+        coverImg = None
+
     firstData = {songName: {"artist": artist,
                             "unitsTrend": unitsTrend,
                             "peakPosition": peakPosition,
                             "weeksOnChart": weeksOnChart,
                             "label": label,
                             "topCities": topCities,
-                            "songStreams": songStreams}}
+                            "songStreams": songStreams,
+                            "coverImg": coverImg}}
 
     dataToSendBack = (-1, firstData)
     dataContainer.append(dataToSendBack)
@@ -113,10 +125,16 @@ def scrapeSongBatch(counterStart, dataContainer):
         unitsTrend = elem.select_one("div.c-chart__table--linegraph")["data-trend-data"]
 
         peakPosition = elem.select_one("div.c-chart__table--stat-base.c-chart__table--peak span").text
-        peakPosition = int(peakPosition) if peakPosition else None
+        try:
+            peakPosition = int(peakPosition)
+        except ValueError:
+            peakPosition = None
 
         weeksOnChart = elem.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-present span").text
-        weeksOnChart = int(weeksOnChart) if weeksOnChart else None
+        try:
+            weeksOnChart = int(weeksOnChart)
+        except ValueError:
+            weeksOnChart = None
 
         label = elem.select_one("span.c-chart__table--label-text").text
 
@@ -130,7 +148,15 @@ def scrapeSongBatch(counterStart, dataContainer):
         songStreams = songStreams.replace('B', 'e9')
         songStreams = songStreams.replace('M', 'e6')
         songStreams = songStreams.replace('K', 'e3')
-        songStreams = float(songStreams) if songStreams else None
+        try:
+            songStreams = float(songStreams)
+        except ValueError:
+            songStreams = None
+
+        try:
+            coverImg = elem.select_one("img.c-chart__table--cover")["src"]
+        except TypeError:
+            coverImg = None
 
         songDataDict[songName] = {"artist": artist,
                                   "unitsTrend": unitsTrend,
@@ -138,7 +164,8 @@ def scrapeSongBatch(counterStart, dataContainer):
                                   "weeksOnChart": weeksOnChart,
                                   "label": label,
                                   "topCities": topCities,
-                                  "songStreams": songStreams}
+                                  "songStreams": songStreams,
+                                  "coverImg": coverImg}
 
     dataToSendBack = (counterStart, songDataDict)
     dataContainer.append(dataToSendBack)
@@ -178,25 +205,40 @@ def scrapeFirstAlbum(dataContainer):
     albumUnits = albumUnits.replace('B', 'e9')
     albumUnits = albumUnits.replace('M', 'e6')
     albumUnits = albumUnits.replace('K', 'e3')
-    albumUnits = float(albumUnits) if albumUnits else None
+    try:
+        albumUnits = float(albumUnits)
+    except ValueError:
+        albumUnits = None
 
     albumSales = soup.select_one("div.c-chart__table--stat-base.c-chart__table--album-sales span").text
     albumSales = albumSales.replace('B', 'e9')
     albumSales = albumSales.replace('M', 'e6')
     albumSales = albumSales.replace('K', 'e3')
-    albumSales = float(albumSales) if albumSales else None
+    try:
+        albumSales = float(albumSales)
+    except ValueError:
+        albumSales = None
 
     songSales = soup.select_one("div.c-chart__table--stat-base.c-chart__table--song-sales span").text
     songSales = songSales.replace('B', 'e9')
     songSales = songSales.replace('M', 'e6')
     songSales = songSales.replace('K', 'e3')
-    songSales = float(songSales) if songSales else None
+    try:
+        songSales = float(songSales)
+    except ValueError:
+        songSales = None
 
     peakPosition = soup.select_one("div.c-chart__table--stat-base.c-chart__table--peak span").text
-    peakPosition = int(peakPosition) if peakPosition else None
+    try:
+        peakPosition = int(peakPosition)
+    except ValueError:
+        peakPosition = None
 
     weeksOnChart = soup.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-present span").text
-    weeksOnChart = int(weeksOnChart) if weeksOnChart else None
+    try:
+        weeksOnChart = int(weeksOnChart)
+    except ValueError:
+        weeksOnChart = None
 
     label = soup.select_one("span.c-chart__table--label-text").text
 
@@ -208,7 +250,15 @@ def scrapeFirstAlbum(dataContainer):
     songStreams = songStreams.replace('B', 'e9')
     songStreams = songStreams.replace('M', 'e6')
     songStreams = songStreams.replace('K', 'e3')
-    songStreams = float(songStreams) if songStreams else None
+    try:
+        songStreams = float(songStreams)
+    except ValueError:
+        songStreams = None
+
+    try:
+        coverImg = soup.select_one("img.c-chart__table--cover")["src"]
+    except TypeError:
+        coverImg = None
 
     firstData = {albumName: {"artist": artist,
                              "albumUnits": albumUnits,
@@ -218,7 +268,8 @@ def scrapeFirstAlbum(dataContainer):
                              "weeksOnChart": weeksOnChart,
                              "label": label,
                              "topSongs": topSongs,
-                             "songStreams": songStreams}}
+                             "songStreams": songStreams,
+                             "coverImg": coverImg}}
 
     dataToSendBack = (-1, firstData)
     dataContainer.append(dataToSendBack)
@@ -247,25 +298,40 @@ def scrapeAlbumBatch(counterStart, dataContainer):
         albumUnits = albumUnits.replace('B', 'e9')
         albumUnits = albumUnits.replace('M', 'e6')
         albumUnits = albumUnits.replace('K', 'e3')
-        albumUnits = float(albumUnits) if albumUnits else None
+        try:
+            albumUnits = float(albumUnits)
+        except ValueError:
+            albumUnits = None
 
         albumSales = elem.select_one("div.c-chart__table--stat-base.c-chart__table--album-sales span").text
         albumSales = albumSales.replace('B', 'e9')
         albumSales = albumSales.replace('M', 'e6')
         albumSales = albumSales.replace('K', 'e3')
-        albumSales = float(albumSales) if albumSales else None
+        try:
+            albumSales = float(albumSales)
+        except ValueError:
+            albumSales = None
 
         songSales = elem.select_one("div.c-chart__table--stat-base.c-chart__table--song-sales span").text
         songSales = songSales.replace('B', 'e9')
         songSales = songSales.replace('M', 'e6')
         songSales = songSales.replace('K', 'e3')
-        songSales = float(songSales) if songSales else None
+        try:
+            songSales = float(songSales)
+        except ValueError:
+            songSales = None
 
         peakPosition = elem.select_one("div.c-chart__table--stat-base.c-chart__table--peak span").text
-        peakPosition = int(peakPosition) if peakPosition else None
+        try:
+            peakPosition = int(peakPosition)
+        except ValueError:
+            peakPosition = None
 
         weeksOnChart = elem.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-present span").text
-        weeksOnChart = int(weeksOnChart) if weeksOnChart else None
+        try:
+            weeksOnChart = int(weeksOnChart)
+        except ValueError:
+            weeksOnChart = None
 
         label = elem.select_one("span.c-chart__table--label-text").text
 
@@ -277,7 +343,15 @@ def scrapeAlbumBatch(counterStart, dataContainer):
         songStreams = songStreams.replace('B', 'e9')
         songStreams = songStreams.replace('M', 'e6')
         songStreams = songStreams.replace('K', 'e3')
-        songStreams = float(songStreams) if songStreams else None
+        try:
+            songStreams = float(songStreams)
+        except ValueError:
+            songStreams = None
+
+        try:
+            coverImg = elem.select_one("img.c-chart__table--cover")["src"]
+        except TypeError:
+            coverImg = None
 
         albumDataDict[albumName] = {"artist": artist,
                                     "albumUnits": albumUnits,
@@ -287,7 +361,9 @@ def scrapeAlbumBatch(counterStart, dataContainer):
                                     "weeksOnChart": weeksOnChart,
                                     "label": label,
                                     "topSongs": topSongs,
-                                    "songStreams": songStreams}
+                                    "songStreams": songStreams,
+                                    "coverImg": coverImg}
+
     dataToSendBack = (counterStart, albumDataDict)
     dataContainer.append(dataToSendBack)
 
@@ -324,20 +400,32 @@ def scrapeFirstArtist(dataContainer):
     songStreams = songStreams.replace('B', 'e9')
     songStreams = songStreams.replace('M', 'e6')
     songStreams = songStreams.replace('K', 'e3')
-    songStreams = float(songStreams) if songStreams else None
+    try:
+        songStreams = float(songStreams)
+    except ValueError:
+        songStreams = None
 
     weeksOnChart = soup.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-present span").text
-    weeksOnChart = int(weeksOnChart) if weeksOnChart else None
+    try:
+        weeksOnChart = int(weeksOnChart)
+    except ValueError:
+        weeksOnChart = None
 
     topSong = soup.select_one("div.c-chart__table--stat-base.c-chart__table--top-song span").text
 
     peakPosition = 1
 
+    try:
+        coverImg = soup.select_one("img.c-chart__table--cover")["src"]
+    except TypeError:
+        coverImg = None
+
     firstData = {artistName: {"artistName": artistName,
                               "songStreams": songStreams,
                               "weeksOnChart": weeksOnChart,
                               "topSong": topSong,
-                              "peakPosition": peakPosition}}
+                              "peakPosition": peakPosition,
+                              "coverImg": coverImg}}
 
     dataToSendBack = (-1, firstData)
     dataContainer.append(dataToSendBack)
@@ -364,21 +452,36 @@ def scrapeArtistsBatch(counterStart, dataContainer):
         songStreams = songStreams.replace('B', 'e9')
         songStreams = songStreams.replace('M', 'e6')
         songStreams = songStreams.replace('K', 'e3')
-        songStreams = float(songStreams) if songStreams else None
+        try:
+            songStreams = float(songStreams)
+        except ValueError:
+            songStreams = None
 
         weeksOnChart = elem.select_one("div.c-chart__table--stat-base.c-chart__table--weeks-present span").text
-        weeksOnChart = int(weeksOnChart) if weeksOnChart else None
+        try:
+            weeksOnChart = int(weeksOnChart)
+        except ValueError:
+            weeksOnChart = None
 
         topSong = elem.select_one("div.c-chart__table--stat-base.c-chart__table--top-song span").text
 
         peakPosition = elem.select_one("div.c-chart__table--stat-base.c-chart__table--peak span").text
-        peakPosition = int(peakPosition) if peakPosition else None
+        try:
+            peakPosition = int(peakPosition)
+        except ValueError:
+            peakPosition = None
+
+        try:
+            coverImg = elem.select_one("img.c-chart__table--cover")["src"]
+        except TypeError:
+            coverImg = None
 
         artistDataDict[artistName] = {"artistName": artistName,
                                       "songStreams": songStreams,
                                       "weeksOnChart": weeksOnChart,
                                       "topSong": topSong,
-                                      "peakPosition": peakPosition}
+                                      "peakPosition": peakPosition,
+                                      "coverImg": coverImg}
 
     dataToSendBack = (counterStart, artistDataDict)
     dataContainer.append(dataToSendBack)

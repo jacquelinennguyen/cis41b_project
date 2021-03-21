@@ -34,10 +34,12 @@ class Album(Chart) :
         (AlbumName, AlbumArtist)
         '''
         L = []
-        for t in self.cur.execute('''SELECT AlbumsDB.name, Names.name, AlbumsDB.label 
+        for t in self.cur.execute('''SELECT AlbumsDB.name, Names.name, Labels.label 
                                 FROM AlbumsDB JOIN Names ON AlbumsDB.artistId = Names.id
+                                JOIN Labels ON AlbumsDB.labelId = Labels.id
                                 WHERE Names.id = AlbumsDB.artistId
-                                AND AlbumsDB.label = (?)''', (label, )) :
+                                AND Labels.id = AlbumsDB.labelId
+                                AND Labels.label = (?)''', (label, )) :
             L.append(t)
         return L
 
@@ -47,10 +49,12 @@ class Album(Chart) :
         (AlbumName, AlbumArtist, RecordLabel)
         '''
         L = []
-        for t in self.cur.execute('''SELECT AlbumsDB.name, Names.name, AlbumsDB.label 
+        for t in self.cur.execute('''SELECT AlbumsDB.name, Names.name, Labels.label 
                                 FROM AlbumsDB JOIN Names ON AlbumsDB.artistId = Names.id
+                                JOIN Labels ON AlbumsDB.labelId = Labels.id
                                 WHERE Names.id = AlbumsDB.artistId
-                                ORDER BY AlbumsDB.label ASC''') :
+                                AND Labels.id = AlbumsDB.labelId
+                                ORDER BY Labels.label ASC''') :
             L.append(t)
         return L
 

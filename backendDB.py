@@ -22,13 +22,14 @@ def genTableArtists(d, conn, cur) :
                    songStreams INTEGER,
                    weeksOnChart INTEGER,
                    topSong TEXT,
-                   peakPosition INTEGER)''')
+                   peakPosition INTEGER,
+                   coverImg TEXT)''')
 
     for k, v in d.items() :
         cur.execute('''INSERT INTO ArtistsDB 
-                        (name, songStreams, weeksOnChart, topSong, peakPosition) 
-                        VALUES (?, ?, ?, ?, ?)''', 
-                        (k, v['songStreams'], v['weeksOnChart'], v['topSong'], v['peakPosition']))
+                        (name, songStreams, weeksOnChart, topSong, peakPosition, coverImg) 
+                        VALUES (?, ?, ?, ?, ?, ?)''',
+                        (k, v['songStreams'], v['weeksOnChart'], v['topSong'], v['peakPosition'], v["coverImg"]))
     conn.commit()
 
 def genTableAlbumsSongs(d1, d2, conn, cur) :
@@ -38,6 +39,21 @@ def genTableAlbumsSongs(d1, d2, conn, cur) :
     2)  Top 100 Songs Table
     3)  Artist Name Key Table
     '''
+
+    cur.execute('DROP TABLE IF EXISTS Names')
+    cur.execute('''CREATE TABLE Names(
+        id INTEGER NOT NULL PRIMARY KEY,
+        name TEXT UNIQUE ON CONFLICT IGNORE
+    )
+    ''')
+
+    cur.execute('DROP TABLE IF EXISTS Labels')
+    cur.execute('''CREATE TABLE Labels(
+            id INTEGER NOT NULL PRIMARY KEY,
+            label TEXT UNIQUE ON CONFLICT IGNORE
+        )
+        ''')
+
     cur.execute('DROP TABLE IF EXISTS AlbumsDB')
     cur.execute('''CREATE TABLE AlbumsDB(
                     name TEXT NOT NULL,
@@ -48,8 +64,9 @@ def genTableAlbumsSongs(d1, d2, conn, cur) :
                     peakPosition INTEGER,
                     weeksOnChart INTEGER,
                     topSongs TEXT,
-                    label TEXT,
-                    songStreams INTEGER
+                    labelId INTEGER,
+                    songStreams INTEGER,
+                    coverImg TEXT
                     )
                     ''')
 
@@ -59,18 +76,14 @@ def genTableAlbumsSongs(d1, d2, conn, cur) :
             artistId INTEGER,
             unitsTrend INTEGER,
             peakPosition INTEGER,
-            label TEXT,
+            labelId INTEGER,
             topCities TEXT,
             weeksOnChart INTEGER,
-            streams INTEGER
+            streams INTEGER,
+            coverImg TEXT
             )''')
 
-    cur.execute('DROP TABLE IF EXISTS Names')
-    cur.execute('''CREATE TABLE Names(
-        id INTEGER NOT NULL PRIMARY KEY,
-        name TEXT UNIQUE ON CONFLICT IGNORE
-    )
-    ''')
+
 
     for k, v in d2.items() :
         artist = v['artist']
@@ -78,14 +91,20 @@ def genTableAlbumsSongs(d1, d2, conn, cur) :
         cur.execute('''INSERT INTO Names (name) VALUES (?)''', (artist,))
         cur.execute('''SELECT id FROM Names WHERE name = ?''', (artist,))
         artist_id = cur.fetchone()[0]
+        label = v['label']
+        cur.execute('''INSERT INTO Labels (label) VALUES (?)''', (label,))
+        cur.execute('''SELECT id FROM Labels WHERE label = ?''', (label,))
+        label_id = cur.fetchone()[0]
         #print(k)
         topSongs = v['topSongs']
         topSongs = ", ".join(topSongs)
         #print(topSongs)
         cur.execute('''INSERT INTO AlbumsDB
-                (name, artistId, albumUnits, albumSales, songSales, peakPosition, weeksOnChart, label, topSongs, songStreams) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (k, artist_id, v['albumUnits'], v['albumSales'], v['songSales'], v['peakPosition'], v['weeksOnChart'], v['label'], topSongs, v['songStreams']))
+                (name, artistId, albumUnits, albumSales, songSales, 
+                peakPosition, weeksOnChart, labelId, topSongs, songStreams, coverImg) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (k, artist_id, v['albumUnits'], v['albumSales'], v['songSales'],
+                      v['peakPosition'], v['weeksOnChart'], label_id, topSongs, v['songStreams'], v["coverImg"]))
     conn.commit()
     for k, v in d1.items() :
         artist = v['artist']
@@ -94,6 +113,10 @@ def genTableAlbumsSongs(d1, d2, conn, cur) :
         cur.execute('''INSERT INTO Names (name) VALUES (?)''', (artist,))
         cur.execute('''SELECT id FROM Names WHERE name = ?''', (artist,))
         artist_id = cur.fetchone()[0]
+        label = v['label']
+        cur.execute('''INSERT INTO Labels (label) VALUES (?)''', (label,))
+        cur.execute('''SELECT id FROM Labels WHERE label = ?''', (label,))
+        label_id = cur.fetchone()[0]
         
         cities = ""
         for i in range(len(v['topCities'])) :
@@ -102,9 +125,10 @@ def genTableAlbumsSongs(d1, d2, conn, cur) :
             cities += s
 
         cur.execute('''INSERT INTO SongsDB
-                (name, artistId, unitsTrend, peakPosition, label, topCities, weeksOnChart, streams) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (k, artist_id, v['unitsTrend'], v['peakPosition'], v['label'], cities, v['weeksOnChart'], v['songStreams']))
+                (name, artistId, unitsTrend, peakPosition, labelId, topCities, weeksOnChart, streams, coverImg) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (k, artist_id, v['unitsTrend'], v['peakPosition'], label_id,
+                      cities, v['weeksOnChart'], v['songStreams'], v["coverImg"]))
     
     conn.commit()
 
@@ -114,6 +138,6 @@ def updateDB() :
     genTableArtists(top500Artists, conn, cur)
     genTableAlbumsSongs(top100Songs, top200Albums, conn, cur)
 
-#updateDB()
+# updateDB()
 #print(top100Songs['drivers license'])
 #print(top200Albums['Future Nostalgia'])
