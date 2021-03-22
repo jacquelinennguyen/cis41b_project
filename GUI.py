@@ -70,7 +70,8 @@ class MainWindow(tk.Tk):
                         data_list = self.albums.albumsDefault()
                     elif self.choice_num == 2:
                         labels = self.albums.labelsInAlbums()
-                        self.choice_index = self.open_choice_lb_window(rank_tpl[0], "Record Labels", labels)
+                        self.choice_index \
+                            = self.open_choice_lb_window(rank_tpl[0], "Record Labels", labels)
                         if self.choice_index and len(self.choice_index) > 0:
                             title = "The Top Album from Selected Record Labels"
                             for index in self.choice_index:
@@ -110,42 +111,25 @@ class MainWindow(tk.Tk):
                         x_axes = "Songs"
                         if self.choice_num == 2:
                             y_axes = "Weeks on Chart"
-                            for index in self.choice_index:
-                                data = self.songs.weeksOfSong(data_list[index])
-                                if data:
-                                    y_list.append(data)
-                                    x_list.append(data_list[index])
-                                else:
-                                    error_list.append(data_list[index])
+                            data_function = self.songs.weeksOfSong
                         else:  # self.choice_num == 3
                             y_axes = "Song Units"
-                            for index in self.choice_index:
-                                data = self.songs.unitsOfSong(data_list[index])
-                                if data:
-                                    y_list.append(data)
-                                    x_list.append(data_list[index])
-                                else:
-                                    error_list.append(data_list[index])
+                            data_function = self.songs.unitsOfSong
                     else:  # rank_tpl[0] == "Top 500 Artists"
                         x_axes = "Artists"
                         if self.choice_num == 2:
                             y_axes = "Weeks on Chart"
-                            for index in self.choice_index:
-                                data = self.artists.weeksOfArtist(data_list[index])
-                                if data:
-                                    y_list.append(data)
-                                    x_list.append(data_list[index])
-                                else:
-                                    error_list.append(data_list[index])
+                            data_function = self.artists.weeksOfArtist
                         else:  # self.choice_num == 3
                             y_axes = "Song Streams"
-                            for index in self.choice_index:
-                                data = self.artists.songStreamsOfArtist(data_list[index])
-                                if data:
-                                    y_list.append(data)
-                                    x_list.append(data_list[index])
-                                else:
-                                    error_list.append(data_list[index])
+                            data_function = self.artists.songStreamsOfArtist
+                    for index in self.choice_index:
+                        data = data_function(data_list[index])
+                        if data:
+                            y_list.append(data)
+                            x_list.append(data_list[index])
+                        else:
+                            error_list.append(data_list[index])
                     if len(error_list) > 0:
                         tkmb.showinfo("No Data", "No data: " + ','.join(error_list), parent=self)
                     if len(y_list) > 0:
