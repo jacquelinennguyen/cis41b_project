@@ -73,7 +73,7 @@ class MainWindow(tk.Tk):
                         self.choice_index \
                             = self.open_choice_lb_window(rank_tpl[0], "Record Labels", labels)
                         if self.choice_index and len(self.choice_index) > 0:
-                            title = "The Top Album from Selected Record Labels"
+                            title = "The Top Album from Selected Record Labels by Weeks on Chart"
                             for index in self.choice_index:
                                 data_list.append(self.albums.topAlbumOfLabel(labels[index]))
                         else:  # NO task if the user doesn't choose anything

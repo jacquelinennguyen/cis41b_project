@@ -45,10 +45,10 @@ class Album(Chart) :
         return the chosen record label, the top album from the label, its artist and album units.
         Input has to be a string. (RecordLabel, AlbumName, AlbumArtist, AlbumUnits)
         '''
-        self.cur.execute('''SELECT AlbumsDB.label, AlbumsDB.name, Names.name, AlbumsDB.albumUnits
+        self.cur.execute('''SELECT AlbumsDB.label, AlbumsDB.name, Names.name, AlbumsDB.weeksOnChart
                         FROM AlbumsDB JOIN Names ON AlbumsDB.artistId = Names.id
                         AND Names.id = AlbumsDB.artistId WHERE AlbumsDB.label = ?
-                        ORDER BY AlbumsDB.albumUnits DESC''', (label, ))
+                        ORDER BY AlbumsDB.weeksOnChart DESC''', (label, ))
         return self.cur.fetchone()
 
     def albumsSales(self) :
