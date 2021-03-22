@@ -17,7 +17,7 @@ class MainWindow(tk.Tk):
         self.albums = Album()
         self.songs = Song()
         self.artists = Artist()
-        rank100_tpl = ("Top 100 Songs", ("Default", "Weeks On Chart", "Sale Units"))
+        rank100_tpl = ("Top 100 Songs", ("Default", "Weeks On Chart", "Song Units"))
         rank200_tpl = ("Top 200 Albums", ("Default", "Weeks On Chart", "Album Sales",
                                           "Song Sales", "Song Streams"))
         rank500_tpl = ("Top 500 Artists", ("Default", "Weeks on Chart", "Song Streams"))
@@ -65,32 +65,32 @@ class MainWindow(tk.Tk):
                 data_list = list()
                 if rank_tpl[0] == "Top 200 Albums":
                     if self.choice_num == 1:
-                        title = ""
+                        title = "The Top 200 Albums Ranked by Album Units"
                         data_list = self.albums.albumsDefault()
                     elif self.choice_num == 2:
                         labels = self.albums.labelsInAlbums()
                         self.choice_index = self.open_choice_lb_window("Record Labels", labels)
                         if self.choice_index and len(self.choice_index) > 0:
-                            title = ""
+                            title = "The Top Album from Selected Record Labels"
                             for index in self.choice_index:
                                 data_list.append(self.albums.topAlbumOfLabel(labels[index]))
                         else:  # NO task if the user doesn't choose anything
                             return
                     elif self.choice_num == 3:
-                        title = ""
+                        title = "The Top 200 Albums Ranked by Album Sales"
                         data_list = self.albums.albumsSales()
                     elif self.choice_num == 4:
-                        title = ""
+                        title = "The Top 200 Albums Ranked by Song Sales"
                         data_list = self.albums.albumSongSales()
                     else:  # self.choice_num == 5
-                        title = ""
+                        title = "The Top 200 Albums Ranked by Song Streams"
                         data_list = self.albums.albumsSongStreams()
                 else:  # rank_tpl[0] != "Top 200 Albums" and self.choice_num > 1
                     if rank_tpl[0] == "Top 100 Songs":
-                        title = ""
+                        title = "Top 100 Songs Ranked by Song Units"
                         data_list = self.songs.songsDefault()
                     else:  # rank_tpl[0] == "Top 500 Artists"
-                        title = ""
+                        title = "Top 500 Artists Ranked by Song Streams"
                         data_list = self.artists.artistsDefault()
                 ResultLBWindow(self, rank_tpl[0], title, data_list)
             else:  # For the choices whose results will be displayed as bar charts
@@ -200,8 +200,7 @@ class ResultLBWindow(tk.Toplevel):
         super().__init__(master)
         self.data = data
         self.title(chart)
-        tk.Label(self, text=title+'\n',
-                 font=(None, 18), width=19).grid(row=0, column=0)
+        tk.Label(self, text='\n'+title, font=(None, 18)).grid(row=0, column=0)
         s = tk.Scrollbar(self)
         self.lb = tk.Listbox(self, height=10, width=86, yscrollcommand=s.set)
         if len(data[0]) == 4:
