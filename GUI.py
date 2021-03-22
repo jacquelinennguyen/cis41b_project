@@ -4,6 +4,7 @@ matplotlib.use('TkAgg')
 import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
+import tkinter.messagebox as tkmb
 from backendQuery import Album, Song, Artist
 
 
@@ -48,9 +49,9 @@ class MainWindow(tk.Tk):
         self.wait_window(fw)
         return fw.get_choice()
 
-    def open_choice_lb_window(self, title, data):
+    def open_choice_lb_window(self, chart, field, data):
         """ Open a choice list box window and get the user input """
-        clbw = ChoiceLBWindow(self, title, data)
+        clbw = ChoiceLBWindow(self, chart, field, data)
         self.wait_window(clbw)
         return clbw.get_choice()
 
@@ -69,7 +70,7 @@ class MainWindow(tk.Tk):
                         data_list = self.albums.albumsDefault()
                     elif self.choice_num == 2:
                         labels = self.albums.labelsInAlbums()
-                        self.choice_index = self.open_choice_lb_window("Record Labels", labels)
+                        self.choice_index = self.open_choice_lb_window(rank_tpl[0], "Record Labels", labels)
                         if self.choice_index and len(self.choice_index) > 0:
                             title = "The Top Album from Selected Record Labels"
                             for index in self.choice_index:
@@ -95,45 +96,60 @@ class MainWindow(tk.Tk):
                 ResultLBWindow(self, rank_tpl[0], title, data_list)
             else:  # For the choices whose results will be displayed as bar charts
                 if rank_tpl[0] == "Top 100 Songs":
-                    if self.choice_num == 2:
-                        field = "Artists"
-                        data = self.songs.allArtistsInSongs()
-                    else:  # self.choice_num == 3
-                        field = "Songs"
-                        data = self.songs.allSongs()
+                    field = "Songs"
+                    data_list = self.songs.allSongs()
                 else:  # rank_tpl[0] == "Top 500 Artists"
                     field = "Artists"
-                    data = self.artists.allArtists()
-                self.choice_index = self.open_choice_lb_window(field, data)
+                    data_list = self.artists.allArtists()
+                self.choice_index = self.open_choice_lb_window(rank_tpl[0], field, data_list)
                 if self.choice_index and len(self.choice_index) > 0:
                     x_list = list()
                     y_list = list()
+                    error_list = list()
                     if rank_tpl[0] == "Top 100 Songs":
+                        x_axes = "Songs"
                         if self.choice_num == 2:
-                            x_axes = "Artists"
                             y_axes = "Weeks on Chart"
                             for index in self.choice_index:
-                                x_list.append(data[index])
-                                y_list.append(self.songs.maxWeeksOfArtist(data[index]))
+                                data = self.songs.weeksOfSong(data_list[index])
+                                if data:
+                                    y_list.append(data)
+                                    x_list.append(data_list[index])
+                                else:
+                                    error_list.append(data_list[index])
                         else:  # self.choice_num == 3
-                            x_axes = "Songs"
                             y_axes = "Song Units"
                             for index in self.choice_index:
-                                x_list.append(data[index])
-                                y_list.append(self.songs.unitsOfSong(data[index]))
-                    else:   # rank_tpl[0] == "Top 500 Artists"
+                                data = self.songs.unitsOfSong(data_list[index])
+                                if data:
+                                    y_list.append(data)
+                                    x_list.append(data_list[index])
+                                else:
+                                    error_list.append(data_list[index])
+                    else:  # rank_tpl[0] == "Top 500 Artists"
                         x_axes = "Artists"
                         if self.choice_num == 2:
                             y_axes = "Weeks on Chart"
                             for index in self.choice_index:
-                                x_list.append(data[index])
-                                y_list.append(self.artists.weeksOfArtist(data[index]))
+                                data = self.artists.weeksOfArtist(data_list[index])
+                                if data:
+                                    y_list.append(data)
+                                    x_list.append(data_list[index])
+                                else:
+                                    error_list.append(data_list[index])
                         else:  # self.choice_num == 3
                             y_axes = "Song Streams"
                             for index in self.choice_index:
-                                x_list.append(data[index])
-                                y_list.append(self.artists.songStreamsOfArtist(data[index]))
-                    ResultBCWindow(self, x_list, y_list, x_axes, y_axes)
+                                data = self.artists.songStreamsOfArtist(data_list[index])
+                                if data:
+                                    y_list.append(data)
+                                    x_list.append(data_list[index])
+                                else:
+                                    error_list.append(data_list[index])
+                    if len(error_list) > 0:
+                        tkmb.showinfo("No Data", "No data: " + ','.join(error_list), parent=self)
+                    if len(y_list) > 0:
+                        ResultBCWindow(self, rank_tpl[0], x_list, y_list, x_axes, y_axes)
 
 
 class FilterWindow(tk.Toplevel):
@@ -167,12 +183,13 @@ class FilterWindow(tk.Toplevel):
 
 
 class ChoiceLBWindow(tk.Toplevel):
-    def __init__(self, master, title, data):
+    def __init__(self, master, chart, field, data):
         """ Constructor: Set up a list box window """
         super().__init__(master)
         self.master = master
         self.choice = None
-        tk.Label(self, text="\nChoose "+title,
+        self.title(chart)
+        tk.Label(self, text="\nChoose " + field,
                  font=(None, 18), width=19).grid(row=0, column=0, columnspan=2)
         s = tk.Scrollbar(self)
         self.lb = tk.Listbox(self, height=10,  width=35,
@@ -221,9 +238,10 @@ class ResultLBWindow(tk.Toplevel):
 
 
 class ResultBCWindow(tk.Toplevel):
-    def __init__(self, master, x_data, y_data, x_label, y_label):
+    def __init__(self, master, chart, x_data, y_data, x_label, y_label):
         """ Constructor: Set up a bar chart result window """
         super().__init__(master)
+        self.title(chart)
         fig = plt.figure()
         plt.title(x_label + " and Their " + y_label)
         plt.bar(range(len(x_data)), y_data, align="center")
@@ -234,6 +252,13 @@ class ResultBCWindow(tk.Toplevel):
         canvas = FigureCanvasTkAgg(fig, master=self)
         canvas.get_tk_widget().grid()
         canvas.draw()
+
+
+class RecordInfoWindow(tk.Toplevel):
+    def __init__(self, master, data):
+        """ Constructor: Set up a bar chart result window """
+        super().__init__(master)
+        self.title("Info")
 
 
 app = MainWindow()
