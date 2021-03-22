@@ -43,7 +43,7 @@ class Album(Chart) :
     def topAlbumOfLabel(self, label) :
         '''
         return the chosen record label, the top album from the label, its artist and album units.
-        Input has to be a string. (RecordLabel, AlbumName, AlbumArtist, AlbumUnits)
+        Input has to be a string. (RecordLabel, AlbumName, AlbumArtist, WeeksOnChart)
         '''
         self.cur.execute('''SELECT AlbumsDB.label, AlbumsDB.name, Names.name, AlbumsDB.weeksOnChart
                         FROM AlbumsDB JOIN Names ON AlbumsDB.artistId = Names.id
@@ -86,7 +86,7 @@ class Album(Chart) :
         It excludes the albums with null song streams (AlbumName, AlbumArtist, SongStreams)
         '''
         L = []
-        for t in self.cur.execute('''SELECT AlbumsDB.name, Names.name, AlbumsDB.songSales 
+        for t in self.cur.execute('''SELECT AlbumsDB.name, Names.name, AlbumsDB.songStreams 
                                 FROM AlbumsDB JOIN Names ON AlbumsDB.artistId = Names.id
                                 WHERE Names.id = AlbumsDB.artistId
                                 AND AlbumsDB.songStreams IS NOT NULL
