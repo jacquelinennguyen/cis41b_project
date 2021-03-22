@@ -37,7 +37,7 @@ class Album(Chart) :
         '''
         returns all the record labels in the album chart
         '''
-        self.cur.execute("SELECT label FROM AlbumsDB")
+        self.cur.execute("SELECT label FROM Labels")
         return sorted(set(data[0] for data in self.cur.fetchall() if data[0] != ""))
 
     def topAlbumOfLabel(self, label) :
@@ -45,9 +45,10 @@ class Album(Chart) :
         return the chosen record label, the top album from the label, its artist and album units.
         Input has to be a string. (RecordLabel, AlbumName, AlbumArtist, WeeksOnChart)
         '''
-        self.cur.execute('''SELECT AlbumsDB.label, AlbumsDB.name, Names.name, AlbumsDB.weeksOnChart
+        self.cur.execute('''SELECT Labels.label, AlbumsDB.name, Names.name, AlbumsDB.weeksOnChart
                         FROM AlbumsDB JOIN Names ON AlbumsDB.artistId = Names.id
-                        AND Names.id = AlbumsDB.artistId WHERE AlbumsDB.label = ?
+                        JOIN Labels ON AlbumsDB.labelId = Labels.id
+                        AND Names.id = AlbumsDB.artistId WHERE Labels.label = ?
                         ORDER BY AlbumsDB.weeksOnChart DESC''', (label, ))
         return self.cur.fetchone()
 
