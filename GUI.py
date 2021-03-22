@@ -236,14 +236,7 @@ class ResultBCWindow(tk.Toplevel):
         canvas = FigureCanvasTkAgg(fig, master=self)
         canvas.get_tk_widget().grid()
         canvas.draw()
-
-
-class RecordInfoWindow(tk.Toplevel):
-    def __init__(self, master, data):
-        """ Constructor: Set up a bar chart result window """
-        super().__init__(master)
-        self.title("Info")
-
+        
 
 app = MainWindow()
 app.mainloop()
