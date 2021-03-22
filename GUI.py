@@ -1,10 +1,10 @@
-# CIS 41B Final Project: GUI.py
+# CIS 41B Final Project: GUI.py - Kaede Hamada
 import matplotlib
 matplotlib.use('TkAgg')
 import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
-import sqlite3
+from backendQuery import Album, Song, Artist
 
 
 class MainWindow(tk.Tk):
@@ -13,17 +13,10 @@ class MainWindow(tk.Tk):
         super().__init__()
         self.choice_num = None  # Initialize choice_num here to use in other methods.
         self.choice_index = None  # Initialize choice_index here to use in other methods.
-        self.conn = sqlite3.connect("rollingstones.db")
-        self.cur = self.conn.cursor()
         self.title("Rolling Stone Charts")
-        self.cur.execute("PRAGMA TABLE_INFO(Names)")
-        self.names_cols = [elem[1] for elem in self.cur.fetchall()]
-        self.cur.execute("PRAGMA TABLE_INFO(AlbumsDB)")
-        self.albums_cols = [elem[1] for elem in self.cur.fetchall()]
-        self.cur.execute("PRAGMA TABLE_INFO(SongsDB)")
-        self.songs_cols = [elem[1] for elem in self.cur.fetchall()]
-        self.cur.execute("PRAGMA TABLE_INFO(ArtistsDB)")
-        self.artists_cols = [elem[1] for elem in self.cur.fetchall()]
+        self.albums = Album()
+        self.songs = Song()
+        self.artists = Artist()
         rank100_tpl = ("Top 100 Songs", ("Default", "Weeks On Chart", "Sale Units"))
         rank200_tpl = ("Top 200 Albums", ("Default", "Weeks On Chart", "Album Sales",
                                           "Song Sales", "Song Streams"))
@@ -44,7 +37,9 @@ class MainWindow(tk.Tk):
 
     def end_program(self):
         """ End the program after closing the connection to a database """
-        self.conn.close()
+        self.albums.close_conn()
+        self.songs.close_conn()
+        self.artists.close_conn()
         self.quit()
 
     def open_filter_window(self, rank_tpl):
@@ -64,111 +59,81 @@ class MainWindow(tk.Tk):
             by an appropriate SQL command for the user input """
         self.choice_num = self.open_filter_window(rank_tpl)
         if self.choice_num:
-            if rank_tpl[0] == "Top 200 Albums":
-                if self.choice_num != 2:
-                    field1 = self.albums_cols[0]
+            # For the choices whose results will be displayed as list boxes
+            if (rank_tpl[0] == "Top 200 Albums") \
+                    or (rank_tpl[0] != "Top 200 Albums" and self.choice_num == 1):
+                data_list = list()
+                if rank_tpl[0] == "Top 200 Albums":
                     if self.choice_num == 1:
-                        field2 = self.albums_cols[2]
-                    elif self.choice_num == 3:
-                        field2 = self.albums_cols[3]
-                    elif self.choice_num == 4:
-                        field2 = self.albums_cols[4]
-                    else:
-                        field2 = self.albums_cols[9]
-                    self.cur.execute('''SELECT %s, %s FROM AlbumsDB 
-                                        WHERE %s IS NOT NULL ORDER BY %s DESC'''
-                                     % (field1, field2, field2, field2))
-                    ResultLBWindow(self, rank_tpl[0], self.cur.fetchall())
-                else:  # self.choice_num == 2
-                    self.cur.execute("SELECT %s FROM AlbumsDB" % (self.albums_cols[8]))
-                    labels = sorted(set(name[0] for name in self.cur.fetchall() if name[0] != ""))
-                    self.choice_index = self.open_choice_lb_window("Record Labels", labels)
-                    if self.choice_index and len(self.choice_index) > 0:
-                        data_list = list()
-                        for index in self.choice_index:
-                            self.cur.execute('''SELECT %s, %s, %s FROM AlbumsDB 
-                                                WHERE %s == ? ORDER BY %s DESC'''
-                                             % (self.albums_cols[8], self.albums_cols[0],
-                                                self.albums_cols[2], self.albums_cols[8],
-                                                self.albums_cols[2]), (labels[index],))
-                            data_list.append(self.cur.fetchone())
-                        ResultLBWindow(self, rank_tpl[0], data_list)
-            else:
-                if rank_tpl[0] == "Top 100 Songs":
-                    if self.choice_num == 1:
-                        data_list = list()
-                        self.cur.execute("SELECT %s, %s FROM SongsDB"
-                                         % (self.songs_cols[0], self.songs_cols[2]))
-                        for name, unit_trends in self.cur.fetchall():
-                            song_units = int(unit_trends.split(',')[-1].rstrip("]]"))
-                            data_list.append((name, song_units))
-                        data_list.sort(key=lambda data: data[1], reverse=True)
-                        ResultLBWindow(self, rank_tpl[0], data_list)
+                        title = ""
+                        data_list = self.albums.albumsDefault()
                     elif self.choice_num == 2:
-                        self.cur.execute('''SELECT Names.%s FROM SongsDB JOIN Names
-                                            ON SongsDB.%s == Names.%s'''
-                                         % (self.names_cols[1], self.songs_cols[1],
-                                            self.names_cols[0]))
-                        artists = sorted(set(name[0] for name in self.cur.fetchall()))
-                        self.choice_index = self.open_choice_lb_window("Artists", artists)
-                        x_list = list()
-                        y_list = list()
+                        labels = self.albums.labelsInAlbums()
+                        self.choice_index = self.open_choice_lb_window("Record Labels", labels)
                         if self.choice_index and len(self.choice_index) > 0:
+                            title = ""
+                            for index in self.choice_index:
+                                data_list.append(self.albums.topAlbumOfLabel(labels[index]))
+                        else:  # NO task if the user doesn't choose anything
+                            return
+                    elif self.choice_num == 3:
+                        title = ""
+                        data_list = self.albums.albumsSales()
+                    elif self.choice_num == 4:
+                        title = ""
+                        data_list = self.albums.albumSongSales()
+                    else:  # self.choice_num == 5
+                        title = ""
+                        data_list = self.albums.albumsSongStreams()
+                else:  # rank_tpl[0] != "Top 200 Albums" and self.choice_num > 1
+                    if rank_tpl[0] == "Top 100 Songs":
+                        title = ""
+                        data_list = self.songs.songsDefault()
+                    else:  # rank_tpl[0] == "Top 500 Artists"
+                        title = ""
+                        data_list = self.artists.artistsDefault()
+                ResultLBWindow(self, rank_tpl[0], title, data_list)
+            else:  # For the choices whose results will be displayed as bar charts
+                if rank_tpl[0] == "Top 100 Songs":
+                    if self.choice_num == 2:
+                        field = "Artists"
+                        data = self.songs.allArtistsInSongs()
+                    else:  # self.choice_num == 3
+                        field = "Songs"
+                        data = self.songs.allSongs()
+                else:  # rank_tpl[0] == "Top 500 Artists"
+                    field = "Artists"
+                    data = self.artists.allArtists()
+                self.choice_index = self.open_choice_lb_window(field, data)
+                if self.choice_index and len(self.choice_index) > 0:
+                    x_list = list()
+                    y_list = list()
+                    if rank_tpl[0] == "Top 100 Songs":
+                        if self.choice_num == 2:
                             x_axes = "Artists"
                             y_axes = "Weeks on Chart"
                             for index in self.choice_index:
-                                self.cur.execute('''SELECT SongsDB.%s FROM SongsDB JOIN Names
-                                                    ON SongsDB.%s == Names.%s
-                                                    AND Names.%s == ? ORDER BY %s DESC'''
-                                                 % (self.songs_cols[6], self.songs_cols[1],
-                                                    self.names_cols[0], self.names_cols[1],
-                                                    self.songs_cols[6]), (artists[index],))
-                                x_list.append(artists[index])
-                                y_list.append(self.cur.fetchone()[0])
-                            ResultBCWindow(self, x_list, y_list, x_axes, y_axes)
-                    else:
-                        self.cur.execute("SELECT %s FROM SongsDB" % (self.songs_cols[0],))
-                        songs = sorted(set(name[0] for name in self.cur.fetchall()))
-                        self.choice_index = self.open_choice_lb_window("Songs", songs)
-                        x_list = list()
-                        y_list = list()
-                        if self.choice_index and len(self.choice_index) > 0:
+                                x_list.append(data[index])
+                                y_list.append(self.songs.maxWeeksOfArtist(data[index]))
+                        else:  # self.choice_num == 3
                             x_axes = "Songs"
                             y_axes = "Song Units"
                             for index in self.choice_index:
-                                self.cur.execute("SELECT %s FROM SongsDB WHERE %s == ?"
-                                                 % (self.songs_cols[2], self.songs_cols[0]),
-                                                 (songs[index],))
-                                x_list.append(songs[index])
-                                y_list.append(int(self.cur.fetchone()[0].split(',')[-1].rstrip("]]")))
-                            ResultBCWindow(self, x_list, y_list, x_axes, y_axes)
-                else:  # rank_tpl[0] == "Top 500 Artists"
-                    field1 = self.artists_cols[0]
-                    if self.choice_num == 1:
-                        field2 = self.artists_cols[1]
-                        self.cur.execute("SELECT %s, %s ArtistsDB ORDER BY %s DESC"
-                                         % (field1, field2, field2))
-                        ResultLBWindow(self, rank_tpl[0], self.cur.fetchall())
-                    else:
-                        self.cur.execute("SELECT %s FROM ArtistsDB" % (self.artists_cols[0],))
-                        artists = sorted(set(name[0] for name in self.cur.fetchall()))
-                        self.choice_index = self.open_choice_lb_window("Artists", artists)
-                        if self.choice_index and len(self.choice_index) > 0:
-                            x_list = list()
-                            y_list = list()
-                            x_axes = "Artists"
-                            if self.choice_num == 2:
-                                y_axes = "Weeks on Chart"
-                                field = self.artists_cols[2]
-                            else:
-                                y_axes = "Song Streams"
-                                field = self.artists_cols[1]
+                                x_list.append(data[index])
+                                y_list.append(self.songs.unitsOfSong(data[index]))
+                    else:   # rank_tpl[0] == "Top 500 Artists"
+                        x_axes = "Artists"
+                        if self.choice_num == 2:
+                            y_axes = "Weeks on Chart"
                             for index in self.choice_index:
-                                self.cur.execute("SELECT %s FROM ArtistsDB WHERE %s == ?"
-                                                 % (field, self.artists_cols[0]), (artists[index],))
-                                x_list.append(artists[index])
-                                y_list.append(self.cur.fetchone()[0])
-                            ResultBCWindow(self, x_list, y_list, x_axes, y_axes)
+                                x_list.append(data[index])
+                                y_list.append(self.artists.weeksOfArtist(data[index]))
+                        else:  # self.choice_num == 3
+                            y_axes = "Song Streams"
+                            for index in self.choice_index:
+                                x_list.append(data[index])
+                                y_list.append(self.artists.songStreamsOfArtist(data[index]))
+                    ResultBCWindow(self, x_list, y_list, x_axes, y_axes)
 
 
 class FilterWindow(tk.Toplevel):
@@ -230,18 +195,24 @@ class ChoiceLBWindow(tk.Toplevel):
 
 
 class ResultLBWindow(tk.Toplevel):
-    def __init__(self, master, title, data):
+    def __init__(self, master, chart, title, data):
         """ Constructor: Set up a list box result window """
         super().__init__(master)
         self.data = data
-        self.title(title)
-        tk.Label(self).grid(row=0, column=0)
+        self.title(chart)
+        tk.Label(self, text=title+'\n',
+                 font=(None, 18), width=19).grid(row=0, column=0)
         s = tk.Scrollbar(self)
-        self.lb = tk.Listbox(self, height=10, width=45, yscrollcommand=s.set)
-        try:
+        self.lb = tk.Listbox(self, height=10, width=86, yscrollcommand=s.set)
+        if len(data[0]) == 4:
             for one_data in data:
-                self.lb.insert(tk.END, "%s: %s (%d)" % (one_data[0], one_data[1], one_data[2]))
-        except IndexError:
+                self.lb.insert(tk.END, "%s: %s - %s (%d)"
+                               % (one_data[0], one_data[1], one_data[2], one_data[3]))
+        elif len(data[0]) == 3:
+            for rank, one_data in enumerate(data, 1):
+                self.lb.insert(tk.END, "%3d. %s - %s: %d"
+                               % (rank, one_data[0], one_data[1], one_data[2]))
+        else:
             for rank, one_data in enumerate(data, 1):
                 self.lb.insert(tk.END, "%3d. %s: %d" % (rank, one_data[0], one_data[1]))
         s.config(command=self.lb.yview)
