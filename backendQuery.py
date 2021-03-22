@@ -145,6 +145,13 @@ class Song(Chart) :
         L = [name[0] for name in self.cur.fetchall()]
         return sorted(L, key=lambda name: name.lower())
 
+    def weeksOfSong(self, song) :
+        '''
+        returns the weeks on chart of the chosen song
+        '''
+        self.cur.execute('''SELECT weeksOnChart FROM SongsDB WHERE name = ?''', (song, ))
+        return int(self.cur.fetchone()[0])
+
     def unitsOfSong(self, song) :
         '''
         returns the song sales of the chosen song
