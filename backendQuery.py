@@ -119,24 +119,6 @@ class Song(Chart) :
             L.append((t[0], t[1], int(t[2].split(',')[-1].replace(']',''))))
         return L
 
-    def allArtistsInSongs(self):
-        '''
-        returns all the artist names in the song chart
-        '''
-        self.cur.execute('''SELECT Names.name FROM SongsDB JOIN Names
-                        ON SongsDB.artistId = Names.id''')
-        S = set(name[0] for name in self.cur.fetchall())
-        return sorted(S, key=lambda name: name.lower())
-
-    def maxWeeksOfArtist(self, artist) :
-        '''
-        returns the largest number of weeks on chart of the chosen artist
-        '''
-        self.cur.execute('''SELECT SongsDB.weeksOnChart FROM SongsDB JOIN Names
-                        ON SongsDB.artistId = Names.id
-                        AND Names.name == ? ORDER BY weeksOnChart DESC''', (artist,))
-        return self.cur.fetchone()[0]
-
     def allSongs(self):
         '''
         returns all the songs in the song chart
@@ -150,7 +132,7 @@ class Song(Chart) :
         returns the weeks on chart of the chosen song
         '''
         self.cur.execute('''SELECT weeksOnChart FROM SongsDB WHERE name = ?''', (song, ))
-        return int(self.cur.fetchone()[0])
+        return self.cur.fetchone()[0]
 
     def unitsOfSong(self, song) :
         '''
