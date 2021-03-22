@@ -96,8 +96,14 @@ class MainWindow(tk.Tk):
             else:
                 if rank_tpl[0] == "Top 100 Songs":
                     if self.choice_num == 1:
-                        '''
-                        '''
+                        data_list = list()
+                        self.cur.execute("SELECT %s, %s FROM SongsDB"
+                                         % (self.songs_cols[0], self.songs_cols[2]))
+                        for name, unit_trends in self.cur.fetchall():
+                            song_units = int(unit_trends.split(',')[-1].rstrip("]]"))
+                            data_list.append((name, song_units))
+                        data_list.sort(key=lambda data: data[1], reverse=True)
+                        ResultLBWindow(self, rank_tpl[0], data_list)
                     elif self.choice_num == 2:
                         self.cur.execute('''SELECT Names.%s FROM SongsDB JOIN Names
                                             ON SongsDB.%s == Names.%s'''
@@ -124,8 +130,18 @@ class MainWindow(tk.Tk):
                         self.cur.execute("SELECT %s FROM SongsDB" % (self.songs_cols[0],))
                         songs = sorted(set(name[0] for name in self.cur.fetchall()))
                         self.choice_index = self.open_choice_lb_window("Songs", songs)
-                        '''
-                        '''
+                        x_list = list()
+                        y_list = list()
+                        if self.choice_index and len(self.choice_index) > 0:
+                            x_axes = "Songs"
+                            y_axes = "Song Units"
+                            for index in self.choice_index:
+                                self.cur.execute("SELECT %s FROM SongsDB WHERE %s == ?"
+                                                 % (self.songs_cols[2], self.songs_cols[0]),
+                                                 (songs[index],))
+                                x_list.append(songs[index])
+                                y_list.append(int(self.cur.fetchone()[0].split(',')[-1].rstrip("]]")))
+                            ResultBCWindow(self, x_list, y_list, x_axes, y_axes)
                 else:  # rank_tpl[0] == "Top 500 Artists"
                     field1 = self.artists_cols[0]
                     if self.choice_num == 1:
