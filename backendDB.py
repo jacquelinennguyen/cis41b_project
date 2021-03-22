@@ -81,7 +81,7 @@ def genTableAlbumsSongs(d1, d2, conn, cur) :
         #print(k)
         topSongs = v['topSongs']
         topSongs = ", ".join(topSongs)
-        #print(topSongs)
+        print(k)
         cur.execute('''INSERT INTO AlbumsDB
                 (name, artistId, albumUnits, albumSales, songSales, peakPosition, weeksOnChart, label, topSongs, songStreams) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -116,4 +116,4 @@ def updateDB() :
 
 #updateDB()
 #print(top100Songs['drivers license'])
-#print(top200Albums['Future Nostalgia'])
+#print(top200Albums['Kid Krow'])
