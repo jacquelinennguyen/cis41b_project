@@ -51,6 +51,7 @@ class Album(Chart) :
                         AND Names.id = AlbumsDB.artistId WHERE Labels.label = ?
                         ORDER BY AlbumsDB.weeksOnChart DESC''', (label, ))
         return self.cur.fetchone()
+    # TEST
 
     def albumsSales(self) :
         '''
