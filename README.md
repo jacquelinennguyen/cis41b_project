@@ -80,7 +80,7 @@ Here we display the top 1 item from each table. (As of Friday, March 19)
 This is from the Project Proposal
 ```
 |-- Start: Rolling Stones Charts
-    |
+    |-- Select week (this is the first thing the user is asked to do.)
     |-- Choice 1: Look at top 100 songs
     |    |-- Choice 1.1: Default - shows the default ranking, ranked by song units
     |    |    |-- List top 100 songs by rank (song units)

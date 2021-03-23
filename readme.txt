@@ -5,7 +5,7 @@ Final Project for Nguyen CIS41B Winter 2021.
 
 Authors: Fawaz Al-Harbi, Kaede Hamada, and Jacqueline Nguyen.
 
-🎶 Overview
+Overview
 ***UPDATE 3/23/2021***
 Upon first opening the GUI application, the user will have to select the week they want to get the data from. After the user locks their choice, the GUI makes 2 calls: one to the backendWebScraper and one to update the database. This call will web scrape and update the  database. After that happens, then the user is allowed to access the 3 top charts. We thought this would make more sense so the user isn't making too many calls to the web scraper in one session. 
 
@@ -20,21 +20,21 @@ As for the Top 500 Artists table, that table is sorted by the number of total st
 
 To view any of the tables used in this application, click [here](https://www.rollingstone.com/charts/).
 
-🎶 Contents
+Contents
 
-|--🎸  **`Media`** - images
+|--  **`Media`** - images
 
-|--🎸  **`backendWebScraper.py`** - gets all the data from 3 Top charts from the Rolling Stones website
+|--  **`backendWebScraper.py`** - gets all the data from 3 Top charts from the Rolling Stones website
 
-|--🎸  **`backendDB.py`** - converts the dictionaries from backendWebScrapper into a SQL database
+|--  **`backendDB.py`** - converts the dictionaries from backendWebScrapper into a SQL database
 
-|--🎸  **`backendQuery.py`** - functions that make SQL queries for the sorting aspect of the program
+|--  **`backendQuery.py`** - functions that make SQL queries for the sorting aspect of the program
 
-|--🎸  **`GUI.py`** - frontend of the program
+|--  **`GUI.py`** - frontend of the program
 
-|--🎸  **`rollingstones.db`** - Contains 4 Tables (Top 500 Artists, Top 200 Albums, Top 100 Songs, Artist Name Keys). Pictured below.
+|--  **`rollingstones.db`** - Contains 4 Tables (Top 500 Artists, Top 200 Albums, Top 100 Songs, Artist Name Keys). Pictured below.
 
-🎶 Samples from the database
+Samples from the database
 Here we display the top 1 item from each table. (As of Friday, March 19)
 
 Top 200 Albums
@@ -58,12 +58,12 @@ Artist Names
 | Morgan Wallen | 1 |
 | Pop Smoke | 2 |
 
-🎶 What are the sizes of the tables? 
+What are the sizes of the tables? 
 * **`Top 200 Albums`**: 200 with 9 fields
 * **`Top 100 Songs`**: 100 with 8 fields
 * **`Top Artist 500`**: 500 with 4 fields
 
-🎶 Flow Logic
+Flow Logic
 Graphic Representation
 * *Top 500 Artists and Top 100 Songs will also have an option to display rankings graphically (Weeks on Chart).*
 * *These are only samples to illustrate the flow of our program. They do not represent the final UI of our program.*
@@ -74,7 +74,7 @@ This is from the Project Proposal
 
 ```
 |-- Start: Rolling Stones Charts
-    |
+    |-- Select week (this is the first thing the user is asked to do.)
     |-- Choice 1: Look at top 100 songs
     |    |-- Choice 1.1: Default - shows the default ranking, ranked by song units
     |    |    |-- List top 100 songs by rank (song units)
