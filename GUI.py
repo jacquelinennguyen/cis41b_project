@@ -37,10 +37,14 @@ class MainWindow(tk.Tk):
     def __init__(self):
         """ Constructor: Set up a main window """
         super().__init__()
-
+        self._generalBackColor = 'SkyBlue4'
+        self._generalTextColor = 'antique white'
+        self._buttonColor = 'salmon3'
+        self._buttonColorActive = 'salmon1'
         self.choice_num = None  # Initialize choice_num here to use in other methods.
         self.choice_index = None  # Initialize choice_index here to use in other methods.
         self.title("Rolling Stone Charts")
+        self.configure(bg=self._generalBackColor)
 
         self.albums = Album()
         self.songs = Song()
@@ -50,18 +54,18 @@ class MainWindow(tk.Tk):
         rank200_tpl = ("Top 200 Albums", ("Default", "Weeks On Chart", "Album Sales",
                                           "Song Sales", "Song Streams"))
         rank500_tpl = ("Top 500 Artists", ("Default", "Weeks on Chart", "Song Streams"))
-        tk.Label(self, text="Select a chart to begin:",
-                 font=(None, 18), width=19).grid(row=0, column=0, pady=5)
-        b1 = tk.Button(self, text=rank100_tpl[0], width=15,
+        tk.Label(self, text="Select a chart to begin:", fg=self._generalTextColor,
+                 font=(None, 18), bg=self._generalBackColor, width=19).grid(row=0, column=0, pady=5)
+        b1 = tk.Button(self, bg=self._buttonColor, fg=self._generalTextColor, text=rank100_tpl[0], width=15,
                        command=lambda: self.show_results(rank100_tpl))
-        b2 = tk.Button(self, text=rank200_tpl[0], width=15,
+        b2 = tk.Button(self, text=rank200_tpl[0], width=15, bg=self._buttonColor,
                        command=lambda: self.show_results(rank200_tpl))
-        b3 = tk.Button(self, text=rank500_tpl[0], width=15,
+        b3 = tk.Button(self, text=rank500_tpl[0], width=15, bg=self._buttonColor,
                        command=lambda: self.show_results(rank500_tpl))
         b1.grid(row=1, column=0)
         b2.grid(row=2, column=0)
         b3.grid(row=3, column=0)
-        tk.Label(self).grid(row=4, column=0)
+        tk.Label(self, bg=self._generalBackColor).grid(row=4, column=0)
         self.focus_set()
 
         week_select_win = WeekSelectWindow(self)
@@ -196,10 +200,13 @@ class MainWindow(tk.Tk):
 class WeekSelectWindow(tk.Toplevel):
     def __init__(self, master):
         super().__init__(master)
+        self._generalBackColor = master._generalBackColor
+        self._buttonColor = master._buttonColor
         self.wait_visibility()
         self.focus_set()
         self.grab_set()
         self.title("Select Week")
+        self.configure(bg=self._generalBackColor)
         n = tk.StringVar()
         self.d_weeks = getweeks()
         d_keys = list(self.d_weeks.keys())
@@ -212,7 +219,7 @@ class WeekSelectWindow(tk.Toplevel):
         tk.Label(self, text="Choose a week to see charts for").grid(row=0, column=0)
         self.weeks.grid(column=0, row=5, pady=10)
 
-        update_button = tk.Button(self, text="Ok", command=self.save_choice)
+        update_button = tk.Button(self, text="Ok", bg=self._buttonColor, command=self.save_choice)
         update_button.grid(row=6, column=0)
 
     def save_choice(self):
@@ -227,18 +234,21 @@ class FilterWindow(tk.Toplevel):
     def __init__(self, master, rank_tpl):
         """ Constructor: Set up a filter window """
         super().__init__(master)
+        self._buttonColor = master._buttonColor
+        self._generalBackColor = master._generalBackColor
         self.title(rank_tpl[0])
+        self.configure(bg=self._generalBackColor)
         self.choice = None  # Initialize choice_num here to use in other methods.
         tk.Label(self, text="\nSort By:",
-                 font=(None, 18), width=19).grid(row=0, column=0, columnspan=3)
+                 font=(None, 18), width=19, bg=self._generalBackColor).grid(row=0, column=0, columnspan=3)
         self.control_var = tk.IntVar()
         for i in range(len(rank_tpl[1])):
             tk.Radiobutton(self, text=rank_tpl[1][i], variable=self.control_var,
                            value=i + 1).grid(row=i + 1, column=1, sticky='w')
         self.control_var.set(1)
-        b = tk.Button(self, text="OK", command=self.set_choice)
+        b = tk.Button(self, text="OK", bg=self._buttonColor, command=self.set_choice)
         b.grid(row=6, column=0, columnspan=3)
-        tk.Label(self).grid(row=7, column=0)
+        tk.Label(self, bg=self._generalBackColor).grid(row=7, column=0)
         self.grab_set()
         self.focus_set()
         self.transient(master)
@@ -257,11 +267,14 @@ class ChoiceLBWindow(tk.Toplevel):
     def __init__(self, master, chart, field, data):
         """ Constructor: Set up a list box window """
         super().__init__(master)
+        self._buttonColor = master._buttonColor
+        self._generalBackColor = master._generalBackColor
         self.master = master
         self.choice = None
         self.title(chart)
+        self.configure(bg=self._generalBackColor)
         tk.Label(self, text="\nChoose " + field,
-                 font=(None, 18), width=19).grid(row=0, column=0, columnspan=2)
+                 font=(None, 18), width=19, bg=self._generalBackColor).grid(row=0, column=0, columnspan=2)
         s = tk.Scrollbar(self)
         self.lb = tk.Listbox(self, height=10, width=35,
                              selectmode="multiple", yscrollcommand=s.set)
@@ -269,7 +282,7 @@ class ChoiceLBWindow(tk.Toplevel):
         s.config(command=self.lb.yview)
         self.lb.grid(row=1, column=0)
         s.grid(row=1, column=1, sticky="ns")
-        tk.Button(self, text="OK", command=self.set_choice).grid(row=2, column=0)
+        tk.Button(self, text="OK", bg=self._buttonColor, command=self.set_choice).grid(row=2, column=0)
         self.grab_set()
         self.focus_set()
         self.transient(master)
@@ -286,11 +299,13 @@ class ResultLBWindow(tk.Toplevel):
     def __init__(self, master, chart, title, data, week_chosen):
         """ Constructor: Set up a list box result window """
         super().__init__(master)
+        self._generalBackColor = master._generalBackColor
         self.focus_set()
         self.data = data
         self.title(chart)
-        tk.Label(self, text='\n' + title, font=(None, 18)).grid(row=0, column=0)
-        tk.Label(self, textvariable=week_chosen, font=(None, 14)).grid(row=1, column=0)
+        self.configure(bg=self._generalBackColor)
+        tk.Label(self, text='\n' + title, font=(None, 18), bg=self._generalBackColor).grid(row=0, column=0)
+        tk.Label(self, textvariable=week_chosen, font=(None, 14), bg=self._generalBackColor).grid(row=1, column=0)
         s = tk.Scrollbar(self)
         self.lb = tk.Listbox(self, height=10, width=86, yscrollcommand=s.set)
         if len(data[0]) == 4:
