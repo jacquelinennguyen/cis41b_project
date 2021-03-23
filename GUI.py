@@ -38,17 +38,9 @@ class MainWindow(tk.Tk):
         """ Constructor: Set up a main window """
         super().__init__()
 
-        week_select_win = WeekSelectWindow(self)
-        week_select_win.wait_window()
-        self.week_chosen = tk.StringVar()
-        self.week_chosen.set(week_select_win.get_week())
-        self.focus_set()
-
         self.choice_num = None  # Initialize choice_num here to use in other methods.
         self.choice_index = None  # Initialize choice_index here to use in other methods.
         self.title("Rolling Stone Charts")
-
-        self.make_update_thread()
 
         self.albums = Album()
         self.songs = Song()
@@ -71,6 +63,14 @@ class MainWindow(tk.Tk):
         b3.grid(row=3, column=0)
         tk.Label(self).grid(row=4, column=0)
         self.focus_set()
+
+        week_select_win = WeekSelectWindow(self)
+        week_select_win.wait_window()
+        self.week_chosen = tk.StringVar()
+        self.week_chosen.set(week_select_win.get_week())
+        self.focus_set()
+        self.make_update_thread()
+
         self.protocol("WM_DELETE_WINDOW", self.end_program)
 
     def make_update_thread(self):
@@ -196,6 +196,7 @@ class MainWindow(tk.Tk):
 class WeekSelectWindow(tk.Toplevel):
     def __init__(self, master):
         super().__init__(master)
+        self.wait_visibility()
         self.focus_set()
         self.grab_set()
         self.title("Select Week")
