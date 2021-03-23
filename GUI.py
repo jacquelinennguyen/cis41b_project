@@ -464,6 +464,7 @@ class InfoWindow(tk.Toplevel):
         super().__init__(master)
         note = "\n This application will allow the user to access 3 top charts on the Rolling Stones website.\n\n" \
                " Choice 1: Look at top 100 songs\n" \
+               "  - Choice 1.1: Default - shows the default ranking, ranked by song units\n"\
                "  - Choice 1.2: Weeks on Chart - compares the selected songs’ weeks on chart in a bar chart\n" \
                "  - Choice 1.3: Song Units - compares the selected songs’ song units in a bar chart\n\n" \
                " Choice 2: Look at top 200 albums\n" \
