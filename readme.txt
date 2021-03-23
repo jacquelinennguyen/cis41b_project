@@ -91,19 +91,18 @@ This is from the Project Proposal
     |    |-- Choice 2.1: Default - shows the default ranking, ranked by album units
     |    |    |-- Displays the listbox of all the album names in the order of Rolling Stone’s ranking
     |    |
-    |    |-- Choice 2.2: Album Sales - shows album names ranked by the number of album sales
+    |    |-- Choice 2.2: Top Albums of Labels - shows the top albums within the selected record labels based on album units
+    |    |    |-- Opens another page where the user can select from a list of record labels 
+    |    |        Once they do, a LB will show the top albums within that record label
+    |    |
+    |    |-- Choice 2.3: Album Sales - shows album names ranked by the number of album sales
     |    |    |-- Displays a listbox of album names ranked by the number of album sales
     |    |
-    |    |-- Choice 2.3: Song Sales - shows album names ranked by the number of songs sales
+    |    |-- Choice 2.4: Song Sales - shows album names ranked by the number of songs sales
     |    |    |-- Displays a listbox of album names ranked by the number of songs sales
     |    |
-    |    |-- Choice 2.4: Song Streams - shows album names ranked by the number of song streams
-    |    |    |-- Displays a listbox of album names ranked by the number of song streams
-    |    |
-    |    |-- Choice 2.5: Top Albums of Labels - shows the top albums within the selected record labels based on album units
-    |         |-- Opens another page where the user can select from a list of record labels 
-    |             Once they do, a LB will show the top albums within that record label
-    |    
+    |    |-- Choice 2.5: Song Streams - shows album names ranked by the number of song streams
+    |         |-- Displays a listbox of album names ranked by the number of song streams  
     |
     |-- Choice 3: Look at top 500 artists
         |-- Choice 3.1: Default - shows the default ranking, ranked by song streams
