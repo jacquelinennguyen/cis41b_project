@@ -25,13 +25,13 @@ class MainWindow(tk.Tk):
 
         # DropDown Menu 
         n = tk.StringVar() 
-        d_weeks = getweeks()
-        d_keys = list(d_weeks.keys())
+        self.d_weeks = getweeks()
+        d_keys = list(self.d_weeks.keys())
         d_keys.reverse()
         #print(d_keys)
         weekChosen = ttk.Combobox(self, width = 27, textvariable = n) 
         weekChosen['values'] = tuple(d_keys)
-        #weekChosen.bind("<<ComboboxSelected>>", callbackfct)
+        weekChosen.bind("<<ComboboxSelected>>", lambda t : self.update(weekChosen.get()))
         weekChosen.grid(column = 0, row = 5) 
 
         rank100_tpl = ("Top 100 Songs", ("Default", "Weeks On Chart", "Song Units"))
@@ -51,6 +51,13 @@ class MainWindow(tk.Tk):
         b3.grid(row=3, column=0)
         tk.Label(self).grid(row=4, column=0)
         self.protocol("WM_DELETE_WINDOW", self.end_program)
+
+    def update(self, s) :
+        lastFri = self.d_weeks[s]
+        print(lastFri)
+        # call backendWebScraper with lastFri
+        # call updateDB from backendDB
+
 
     def end_program(self):
         """ End the program after closing the connection to a database """
