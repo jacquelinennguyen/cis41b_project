@@ -15,7 +15,7 @@ Authors: [Fawaz Al-Harbi](https://github.com/monsieurCat), [Kaede Hamada](https:
 ## 🎶 Overview
 >***UPDATE 3/23/2021***
 > Upon first opening the GUI application, the user will have to select the week they want to get the data from. After the user locks their choice, the GUI makes 2 calls: one to the backendWebScraper and one to update the database. This call will web scrape and update the  database. After that happens, then the user is allowed to access the 3 top charts. We thought this would make more sense so the user isn't making too many calls to the web scraper in one session. 
-
+>
 > We also decided on using GitHub (we know you said to do it after) because it made it easier for us to share our code and work on different features simultaneously. Fawaz and Kaede will probably upload a copy to their GitHubs after we submit this final if they choose to do so.
 >***end of update***
 
