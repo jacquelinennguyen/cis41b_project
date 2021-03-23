@@ -22,7 +22,7 @@ class MainWindow(tk.Tk):
         super().__init__()
         self.choice_num = None  # Initialize choice_num here to use in other methods.
         self.choice_index = None  # Initialize choice_index here to use in other methods.
-        self.title("Rolling Stone Charts")
+        self.title("Rolling Stones Charts")
         self.albums = Album()
         self.songs = Song()
         self.artists = Artist()
