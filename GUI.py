@@ -32,19 +32,20 @@ year = lastFriday.strftime("%Y")
 # thread.start()
 # thread.join()
 
+_generalBackColor = 'SkyBlue4'
+_generalTextColor = 'antique white'
+_buttonColor = 'salmon3'
+_buttonColorActive = 'salmon1'
 
 class MainWindow(tk.Tk):
     def __init__(self):
         """ Constructor: Set up a main window """
         super().__init__()
-        self._generalBackColor = 'SkyBlue4'
-        self._generalTextColor = 'antique white'
-        self._buttonColor = 'salmon3'
-        self._buttonColorActive = 'salmon1'
+
         self.choice_num = None  # Initialize choice_num here to use in other methods.
         self.choice_index = None  # Initialize choice_index here to use in other methods.
         self.title("Rolling Stone Charts")
-        self.configure(bg=self._generalBackColor)
+        self.configure(bg=_generalBackColor)
 
         self.albums = Album()
         self.songs = Song()
@@ -54,18 +55,20 @@ class MainWindow(tk.Tk):
         rank200_tpl = ("Top 200 Albums", ("Default", "Weeks On Chart", "Album Sales",
                                           "Song Sales", "Song Streams"))
         rank500_tpl = ("Top 500 Artists", ("Default", "Weeks on Chart", "Song Streams"))
-        tk.Label(self, text="Select a chart to begin:", fg=self._generalTextColor,
-                 font=(None, 18), bg=self._generalBackColor, width=19).grid(row=0, column=0, pady=5)
-        b1 = tk.Button(self, bg=self._buttonColor, fg=self._generalTextColor, text=rank100_tpl[0], width=15,
+        tk.Label(self, text="Select a chart to begin:", fg=_generalTextColor,
+                 font=(None, 18), bg=_generalBackColor, width=19).grid(row=0, column=0, pady=5)
+        b1 = tk.Button(self, bg=_buttonColor, fg=_generalTextColor, text=rank100_tpl[0], width=15,
                        command=lambda: self.show_results(rank100_tpl))
-        b2 = tk.Button(self, text=rank200_tpl[0], width=15, bg=self._buttonColor,
+        b2 = tk.Button(self, text=rank200_tpl[0], width=15, bg=_buttonColor,
+                       foreground=_generalTextColor,
                        command=lambda: self.show_results(rank200_tpl))
-        b3 = tk.Button(self, text=rank500_tpl[0], width=15, bg=self._buttonColor,
+        b3 = tk.Button(self, text=rank500_tpl[0], width=15, bg=_buttonColor,
+                       foreground=_generalTextColor,
                        command=lambda: self.show_results(rank500_tpl))
         b1.grid(row=1, column=0)
         b2.grid(row=2, column=0)
         b3.grid(row=3, column=0)
-        tk.Label(self, bg=self._generalBackColor).grid(row=4, column=0)
+        tk.Label(self, bg=_generalBackColor).grid(row=4, column=0)
         self.focus_set()
 
         week_select_win = WeekSelectWindow(self)
@@ -82,8 +85,15 @@ class MainWindow(tk.Tk):
         elements = chosen_week.split(' ')
         _monthLetter = elements[0]
         _monthNumber = datetime.strptime(monthLetter, '%b').strftime("%m")
-        _day = elements[1][:-1]
-        _year = elements[2]
+        try:
+            _day = elements[1][:-1]
+            _year = elements[2]
+        except IndexError:
+            _monthLetter = monthLetter
+            _monthNumber = monthNumber
+            _day = day
+            _year = year
+
         update_thread = threading.Thread(target=scrape, args=(_year, _monthLetter, _monthNumber, _day,))
         update_thread.start()
         update_thread.join()
@@ -200,13 +210,11 @@ class MainWindow(tk.Tk):
 class WeekSelectWindow(tk.Toplevel):
     def __init__(self, master):
         super().__init__(master)
-        self._generalBackColor = master._generalBackColor
-        self._buttonColor = master._buttonColor
         self.wait_visibility()
         self.focus_set()
         self.grab_set()
         self.title("Select Week")
-        self.configure(bg=self._generalBackColor)
+        self.configure(bg=_generalBackColor)
         n = tk.StringVar()
         self.d_weeks = getweeks()
         d_keys = list(self.d_weeks.keys())
@@ -216,10 +224,15 @@ class WeekSelectWindow(tk.Toplevel):
         self.weeks = ttk.Combobox(self, width=27, textvariable=n)
         self.weeks['values'] = tuple(d_keys)
         self.weeks.bind("<<ComboboxSelected>>")
-        tk.Label(self, text="Choose a week to see charts for").grid(row=0, column=0)
+        tk.Label(self, text="Choose a week to see charts for",
+                 bg=_generalBackColor,
+                 foreground=_generalTextColor).grid(row=0, column=0)
         self.weeks.grid(column=0, row=5, pady=10)
 
-        update_button = tk.Button(self, text="Ok", bg=self._buttonColor, command=self.save_choice)
+        update_button = tk.Button(self, text="Ok",
+                                  bg=_buttonColor,
+                                  foreground=_generalTextColor,
+                                  command=self.save_choice)
         update_button.grid(row=6, column=0)
 
     def save_choice(self):
@@ -234,21 +247,26 @@ class FilterWindow(tk.Toplevel):
     def __init__(self, master, rank_tpl):
         """ Constructor: Set up a filter window """
         super().__init__(master)
-        self._buttonColor = master._buttonColor
-        self._generalBackColor = master._generalBackColor
         self.title(rank_tpl[0])
-        self.configure(bg=self._generalBackColor)
+        self.configure(bg=_generalBackColor)
         self.choice = None  # Initialize choice_num here to use in other methods.
         tk.Label(self, text="\nSort By:",
-                 font=(None, 18), width=19, bg=self._generalBackColor).grid(row=0, column=0, columnspan=3)
+                 font=(None, 18), width=19,
+                 bg=_generalBackColor,
+                 foreground=_generalTextColor).grid(row=0, column=0, columnspan=3)
         self.control_var = tk.IntVar()
         for i in range(len(rank_tpl[1])):
-            tk.Radiobutton(self, text=rank_tpl[1][i], variable=self.control_var,
+            tk.Radiobutton(self, text=rank_tpl[1][i],
+                           variable=self.control_var,
+                           bg=_generalBackColor,
+                           activebackground="SkyBlue3",
                            value=i + 1).grid(row=i + 1, column=1, sticky='w')
         self.control_var.set(1)
-        b = tk.Button(self, text="OK", bg=self._buttonColor, command=self.set_choice)
+        b = tk.Button(self, text="OK", bg=_buttonColor,
+                      foreground=_generalTextColor,
+                      command=self.set_choice)
         b.grid(row=6, column=0, columnspan=3)
-        tk.Label(self, bg=self._generalBackColor).grid(row=7, column=0)
+        tk.Label(self, bg=_generalBackColor).grid(row=7, column=0)
         self.grab_set()
         self.focus_set()
         self.transient(master)
@@ -267,22 +285,23 @@ class ChoiceLBWindow(tk.Toplevel):
     def __init__(self, master, chart, field, data):
         """ Constructor: Set up a list box window """
         super().__init__(master)
-        self._buttonColor = master._buttonColor
-        self._generalBackColor = master._generalBackColor
         self.master = master
         self.choice = None
         self.title(chart)
-        self.configure(bg=self._generalBackColor)
+        self.configure(bg=_generalBackColor)
         tk.Label(self, text="\nChoose " + field,
-                 font=(None, 18), width=19, bg=self._generalBackColor).grid(row=0, column=0, columnspan=2)
+                 font=(None, 18), width=19, bg=_generalBackColor).grid(row=0, column=0, columnspan=2)
         s = tk.Scrollbar(self)
         self.lb = tk.Listbox(self, height=10, width=35,
-                             selectmode="multiple", yscrollcommand=s.set)
+                             selectmode="multiple", yscrollcommand=s.set,
+                             bg=_generalTextColor)
         self.lb.insert(tk.END, *data)
         s.config(command=self.lb.yview)
         self.lb.grid(row=1, column=0)
         s.grid(row=1, column=1, sticky="ns")
-        tk.Button(self, text="OK", bg=self._buttonColor, command=self.set_choice).grid(row=2, column=0)
+        tk.Button(self, text="OK", bg=_buttonColor,
+                  foreground=_generalTextColor,
+                  command=self.set_choice).grid(row=2, column=0)
         self.grab_set()
         self.focus_set()
         self.transient(master)
@@ -299,15 +318,19 @@ class ResultLBWindow(tk.Toplevel):
     def __init__(self, master, chart, title, data, week_chosen):
         """ Constructor: Set up a list box result window """
         super().__init__(master)
-        self._generalBackColor = master._generalBackColor
         self.focus_set()
         self.data = data
         self.title(chart)
-        self.configure(bg=self._generalBackColor)
-        tk.Label(self, text='\n' + title, font=(None, 18), bg=self._generalBackColor).grid(row=0, column=0)
-        tk.Label(self, textvariable=week_chosen, font=(None, 14), bg=self._generalBackColor).grid(row=1, column=0)
+        self.configure(bg=_generalBackColor)
+        tk.Label(self, text='\n' + title, font=(None, 18),
+                 bg=_generalBackColor,
+                 foreground=_generalTextColor).grid(row=0, column=0)
+        tk.Label(self, textvariable=week_chosen, font=(None, 14),
+                 bg=_generalBackColor,
+                 foreground=_generalTextColor).grid(row=1, column=0)
         s = tk.Scrollbar(self)
-        self.lb = tk.Listbox(self, height=10, width=86, yscrollcommand=s.set)
+        self.lb = tk.Listbox(self, height=10, width=86, yscrollcommand=s.set,
+                             bg=_generalTextColor)
         if len(data[0]) == 4:
             for one_data in data:
                 self.lb.insert(tk.END, "%s: %s - %s (%d)"
@@ -332,14 +355,21 @@ class ResultLBWindow(tk.Toplevel):
             self.song_streams = tk.IntVar()
 
             song_name_lbl = tk.Label(self.song_frame, textvariable=self.song_name, font=('Helvetica', 24, 'bold'),
-                                     relief="ridge")
+                                     relief="ridge",
+                                     bg=_generalTextColor)
             artist_name_lbl = tk.Label(self.song_frame, textvariable=self.artist_name, font=('Helvetica', 18, 'bold'),
-                                       relief="ridge")
-            label_lbl = tk.Label(self.song_frame, textvariable=self.label, font=('Helvetica', 14))
-            peak_position_lbl = tk.Label(self.song_frame, textvariable=self.peak_position, font=('Helvetica', 14))
-            weeks_on_chart_lbl = tk.Label(self.song_frame, textvariable=self.weeks_on_chart, font=('Helvetica', 14))
-            top_cities_lbl = tk.Label(self.song_frame, textvariable=self.top_cities, font=('Helvetica', 14), anchor="w")
-            song_streams_lbl = tk.Label(self.song_frame, textvariable=self.song_streams, font=('Helvetica', 14))
+                                       relief="ridge",
+                                       bg=_generalTextColor)
+            label_lbl = tk.Label(self.song_frame, textvariable=self.label, font=('Helvetica', 14),
+                                 bg=_generalTextColor)
+            peak_position_lbl = tk.Label(self.song_frame, textvariable=self.peak_position, font=('Helvetica', 14),
+                                         bg=_generalTextColor)
+            weeks_on_chart_lbl = tk.Label(self.song_frame, textvariable=self.weeks_on_chart, font=('Helvetica', 14),
+                                          bg=_generalTextColor)
+            top_cities_lbl = tk.Label(self.song_frame, textvariable=self.top_cities, font=('Helvetica', 14), anchor="w",
+                                      bg=_generalTextColor)
+            song_streams_lbl = tk.Label(self.song_frame, textvariable=self.song_streams, font=('Helvetica', 14),
+                                        bg=_generalTextColor)
 
             song_name_lbl.grid(row=0, column=1, sticky="n")
             artist_name_lbl.grid(row=1, column=1)
@@ -365,16 +395,25 @@ class ResultLBWindow(tk.Toplevel):
             self.top_songs = tk.StringVar()
             self.song_streams = tk.IntVar()
             album_name_lbl = tk.Label(self.album_frame, textvariable=self.album_name, font=('Helvetica', 24, 'bold'),
-                                      relief="ridge")
+                                      relief="ridge",
+                                      bg=_generalTextColor)
             artist_name_lbl = tk.Label(self.album_frame, textvariable=self.artist_name, font=('Helvetica', 18, 'bold'),
-                                       relief="ridge")
-            album_units_lbl = tk.Label(self.album_frame, textvariable=self.album_units, font=('Helvetica', 14))
-            album_sales_lbl = tk.Label(self.album_frame, textvariable=self.album_sales, font=('Helvetica', 14))
-            song_sales_lbl = tk.Label(self.album_frame, textvariable=self.song_sales, font=('Helvetica', 14))
-            peak_position_lbl = tk.Label(self.album_frame, textvariable=self.peak_position, font=('Helvetica', 14))
-            weeks_on_chart_lbl = tk.Label(self.album_frame, textvariable=self.weeks_on_chart, font=('Helvetica', 14))
-            top_songs_lbl = tk.Label(self.album_frame, textvariable=self.top_songs, font=('Helvetica', 14), anchor="w")
-            song_streams_lbl = tk.Label(self.album_frame, textvariable=self.song_streams, font=('Helvetica', 14))
+                                       relief="ridge",
+                                       bg=_generalTextColor)
+            album_units_lbl = tk.Label(self.album_frame, textvariable=self.album_units, font=('Helvetica', 14),
+                                       bg=_generalTextColor)
+            album_sales_lbl = tk.Label(self.album_frame, textvariable=self.album_sales, font=('Helvetica', 14),
+                                       bg=_generalTextColor)
+            song_sales_lbl = tk.Label(self.album_frame, textvariable=self.song_sales, font=('Helvetica', 14),
+                                      bg=_generalTextColor)
+            peak_position_lbl = tk.Label(self.album_frame, textvariable=self.peak_position, font=('Helvetica', 14),
+                                         bg=_generalTextColor)
+            weeks_on_chart_lbl = tk.Label(self.album_frame, textvariable=self.weeks_on_chart, font=('Helvetica', 14),
+                                          bg=_generalTextColor)
+            top_songs_lbl = tk.Label(self.album_frame, textvariable=self.top_songs, font=('Helvetica', 14), anchor="w",
+                                     bg=_generalTextColor)
+            song_streams_lbl = tk.Label(self.album_frame, textvariable=self.song_streams, font=('Helvetica', 14),
+                                        bg=_generalTextColor)
 
             album_name_lbl.grid(row=0, column=1, sticky="n")
             artist_name_lbl.grid(row=1, column=1)
@@ -399,11 +438,16 @@ class ResultLBWindow(tk.Toplevel):
             self.peak_position = tk.IntVar()
 
             artist_name_lbl = tk.Label(self.artist_frame, textvariable=self.artist_name, font=('Helvetica', 18, 'bold'),
-                                       relief="ridge")
-            song_streams_lbl = tk.Label(self.artist_frame, textvariable=self.song_streams, font=('Helvetica', 14))
-            weeks_on_chart_lbl = tk.Label(self.artist_frame, textvariable=self.weeks_on_chart, font=('Helvetica', 14))
-            top_song_lbl = tk.Label(self.artist_frame, textvariable=self.top_song, font=('Helvetica', 14), anchor="w")
-            peak_position_lbl = tk.Label(self.artist_frame, textvariable=self.peak_position, font=('Helvetica', 14))
+                                       relief="ridge",
+                                       bg=_generalTextColor)
+            song_streams_lbl = tk.Label(self.artist_frame, textvariable=self.song_streams, font=('Helvetica', 14),
+                                        bg=_generalTextColor)
+            weeks_on_chart_lbl = tk.Label(self.artist_frame, textvariable=self.weeks_on_chart, font=('Helvetica', 14),
+                                          bg=_generalTextColor)
+            top_song_lbl = tk.Label(self.artist_frame, textvariable=self.top_song, font=('Helvetica', 14), anchor="w",
+                                    bg=_generalTextColor)
+            peak_position_lbl = tk.Label(self.artist_frame, textvariable=self.peak_position, font=('Helvetica', 14),
+                                         bg=_generalTextColor)
 
             artist_name_lbl.grid(row=0, column=1, sticky="n")
             peak_position_lbl.grid(row=5, column=0, sticky="w", columnspan=2)
@@ -420,6 +464,7 @@ class ResultLBWindow(tk.Toplevel):
 
     def show_album_record(self, event):
         self.album_frame.grid()
+        self.album_frame.configure(bg=_generalTextColor)
         selection = self.lb.curselection()[0]
 
         # loads image from server
@@ -452,6 +497,7 @@ class ResultLBWindow(tk.Toplevel):
 
     def show_song_record(self, event):
         self.song_frame.grid()
+        self.song_frame.configure(bg=_generalTextColor)
         selection = self.lb.curselection()[0]
 
         # loads image from server
@@ -482,6 +528,7 @@ class ResultLBWindow(tk.Toplevel):
 
     def show_artist_record(self, event):
         self.artist_frame.grid()
+        self.artist_frame.configure(bg=_generalTextColor)
         selection = self.lb.curselection()[0]
 
         # loads image from server
