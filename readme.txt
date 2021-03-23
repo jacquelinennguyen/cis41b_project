@@ -30,6 +30,8 @@ Contents
 
 |--  **`backendQuery.py`** - functions that make SQL queries for the sorting aspect of the program
 
+|--  **`weeks.py`** - Script to get all of the available input weeks that Rolling Stones will let you webscrape from
+
 |--  **`GUI.py`** - frontend of the program
 
 |--  **`rollingstones.db`** - Contains 4 Tables (Top 500 Artists, Top 200 Albums, Top 100 Songs, Artist Name Keys). Pictured below.
