@@ -43,7 +43,7 @@ class MainWindow(tk.Tk):
         self._buttonColorActive = 'salmon1'
         self.choice_num = None  # Initialize choice_num here to use in other methods.
         self.choice_index = None  # Initialize choice_index here to use in other methods.
-        self.title("Rolling Stone Charts")
+        self.title("Rolling Stones Charts")
         self.configure(bg=self._generalBackColor)
 
         self.albums = Album()
@@ -51,7 +51,7 @@ class MainWindow(tk.Tk):
         self.artists = Artist()
 
         rank100_tpl = ("Top 100 Songs", ("Default", "Weeks On Chart", "Song Units"))
-        rank200_tpl = ("Top 200 Albums", ("Default", "Weeks On Chart", "Album Sales",
+        rank200_tpl = ("Top 200 Albums", ("Default", "Top Albums of Labels", "Album Sales",
                                           "Song Sales", "Song Streams"))
         rank500_tpl = ("Top 500 Artists", ("Default", "Weeks on Chart", "Song Streams"))
         tk.Label(self, text="Select a chart to begin:", fg=self._generalTextColor,
