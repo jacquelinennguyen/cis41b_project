@@ -2,12 +2,18 @@
 import matplotlib
 matplotlib.use('TkAgg')
 import tkinter as tk
-from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import tkinter.messagebox as tkmb
+from PIL import ImageTk, Image
+import urllib
+import requests
 from backendQuery import Album, Song, Artist
+from backendWebScraper import scrape
+from backendDB import updateDB
+from datetime import datetime
 from weeks import getweeks
+from tkinter import ttk
 
 
 class MainWindow(tk.Tk):
@@ -16,23 +22,29 @@ class MainWindow(tk.Tk):
         super().__init__()
         self.choice_num = None  # Initialize choice_num here to use in other methods.
         self.choice_index = None  # Initialize choice_index here to use in other methods.
-        self.title("Rolling Stones Charts")
+        self.title("Rolling Stone Charts")
         self.albums = Album()
         self.songs = Song()
         self.artists = Artist()
+
+        # DropDown Menu
+        n = tk.StringVar()
+        self.d_weeks = getweeks()
+        d_keys = list(self.d_weeks.keys())
+        d_keys.reverse()
+        # print(d_keys)
+        self.week_chosen = tk.StringVar()
+        weekChosen = ttk.Combobox(self, width=27, textvariable=n)
+        weekChosen['values'] = tuple(d_keys)
+        weekChosen.bind("<<ComboboxSelected>>", lambda t: self.update(weekChosen.get()))
+        weekChosen.grid(column=0, row=5, pady=10)
+
         rank100_tpl = ("Top 100 Songs", ("Default", "Weeks on Chart", "Song Units"))
         rank200_tpl = ("Top 200 Albums", ("Default", "Album Sales", "Song Sales",
                                           "Song Streams", "Top Albums of Labels"))
         rank500_tpl = ("Top 500 Artists", ("Default", "Weeks on Chart", "Song Streams"))
-        tk.Label(self, text="\nRolling Stones Charts",
-                 font=(None, 18), width=19).grid(row=0, column=0)
-        self.d = getweeks()
-        self.week = tk.StringVar()
-        self.weekChosen = ttk.Combobox(self, width=20)
-        self.weekChosen['values'] = tuple(self.d.keys())
-        self.weekChosen.grid(row=1, column=0)
-        self.weekChosen.bind("<<ComboboxSelected>>", self.get_week)
-        tk.Label(self, text="\nSelect a chart to begin:").grid(row=2, column=0)
+        tk.Label(self, text="Select a chart to begin:",
+                 font=(None, 18), width=19).grid(row=0, column=0, pady=5)
         b1 = tk.Button(self, text=rank100_tpl[0], width=15,
                        command=lambda: self.show_results(rank100_tpl))
         b2 = tk.Button(self, text=rank200_tpl[0], width=15,
@@ -40,13 +52,30 @@ class MainWindow(tk.Tk):
         b3 = tk.Button(self, text=rank500_tpl[0], width=15,
                        command=lambda: self.show_results(rank500_tpl))
         b4 = tk.Button(self, text="Note", width=7, command=lambda: InfoWindow(self))
-        b1.grid(row=3, column=0)
-        b2.grid(row=4, column=0)
-        b3.grid(row=5, column=0)
+        b1.grid(row=1, column=0)
+        b2.grid(row=2, column=0)
+        b3.grid(row=3, column=0)
         b4.grid(row=7, column=0)
+        tk.Label(self).grid(row=4, column=0)
         tk.Label(self).grid(row=6, column=0)
         tk.Label(self).grid(row=8, column=0)
         self.protocol("WM_DELETE_WINDOW", self.end_program)
+
+    def update(self, chosen_week):
+        self.albums.close_conn()
+        self.songs.close_conn()
+        self.artists.close_conn()
+        self.week_chosen.set(chosen_week)
+        elements = chosen_week.split(' ')
+        monthLetter = elements[0]
+        monthNumber = datetime.strptime(monthLetter, '%b').strftime("%m")
+        day = elements[1][:-1]
+        year = elements[2]
+        scrape(year, monthLetter, monthNumber, day)
+        updateDB()
+        self.albums = Album()
+        self.songs = Song()
+        self.artists = Artist()
 
     def end_program(self):
         """ End the program after closing the connection to a database """
@@ -54,9 +83,6 @@ class MainWindow(tk.Tk):
         self.songs.close_conn()
         self.artists.close_conn()
         self.quit()
-
-    def get_week(self, event):
-        return self.d[self.weekChosen.get()]
 
     def open_filter_window(self, rank_tpl):
         """ Open a filter window and get the user input """
@@ -109,7 +135,7 @@ class MainWindow(tk.Tk):
                     else:  # rank_tpl[0] == "Top 500 Artists"
                         title = "Top 500 Artists Ranked by Song Streams"
                         data_list = self.artists.artistsDefault()
-                ResultLBWindow(self, rank_tpl[0], title, data_list)
+                ResultLBWindow(self, rank_tpl[0], title, data_list, self.week_chosen)
             else:  # For the choices whose results will be displayed as bar charts
                 if rank_tpl[0] == "Top 100 Songs":
                     field = "Songs"
@@ -211,12 +237,14 @@ class ChoiceLBWindow(tk.Toplevel):
 
 
 class ResultLBWindow(tk.Toplevel):
-    def __init__(self, master, chart, title, data):
+    def __init__(self, master, chart, title, data, week_chosen):
         """ Constructor: Set up a list box result window """
         super().__init__(master)
+        self.focus_set()
         self.data = data
         self.title(chart)
         tk.Label(self, text='\n' + title, font=(None, 18)).grid(row=0, column=0)
+        tk.Label(self, textvariable=week_chosen, font=(None, 14)).grid(row=1, column=0)
         s = tk.Scrollbar(self)
         self.lb = tk.Listbox(self, height=10, width=86, yscrollcommand=s.set)
         if len(data[0]) == 4:
@@ -227,13 +255,190 @@ class ResultLBWindow(tk.Toplevel):
             for rank, one_data in enumerate(data, 1):
                 self.lb.insert(tk.END, "%3d. %s - %s: %d"
                                % (rank, one_data[0], one_data[1], one_data[2]))
-        else:
+
+        # START OF TEST:
+        elif len(data[0]) == 13:
+            self.song_frame = tk.Frame(self)
             for rank, one_data in enumerate(data, 1):
-                self.lb.insert(tk.END, "%3d. %s: %d" % (rank, one_data[0], one_data[1]))
+                self.lb.insert(tk.END, "%3d. %s" % (rank, one_data[0]))
+            self.song_name = tk.StringVar()
+            self.artist_name = tk.StringVar()
+            self.units_trend = list()
+            self.label = tk.StringVar()
+            self.peak_position = tk.IntVar()
+            self.weeks_on_chart = tk.IntVar()
+            self.top_cities = tk.StringVar()
+            self.song_streams = tk.IntVar()
+
+            song_name_lbl = tk.Label(self.song_frame, textvariable=self.song_name, font=('Helvetica', 24, 'bold'),
+                                     relief="ridge")
+            artist_name_lbl = tk.Label(self.song_frame, textvariable=self.artist_name, font=('Helvetica', 18, 'bold'),
+                                       relief="ridge")
+            label_lbl = tk.Label(self.song_frame, textvariable=self.label, font=('Helvetica', 14))
+            peak_position_lbl = tk.Label(self.song_frame, textvariable=self.peak_position, font=('Helvetica', 14))
+            weeks_on_chart_lbl = tk.Label(self.song_frame, textvariable=self.weeks_on_chart, font=('Helvetica', 14))
+            top_cities_lbl = tk.Label(self.song_frame, textvariable=self.top_cities, font=('Helvetica', 14), anchor="w")
+            song_streams_lbl = tk.Label(self.song_frame, textvariable=self.song_streams, font=('Helvetica', 14))
+
+            song_name_lbl.grid(row=0, column=1, sticky="n")
+            artist_name_lbl.grid(row=1, column=1)
+            label_lbl.grid(row=2, column=0, sticky="w", columnspan=2)
+            peak_position_lbl.grid(row=5, column=0, sticky="w", columnspan=2)
+            weeks_on_chart_lbl.grid(row=6, column=0, sticky="w", columnspan=2)
+            top_cities_lbl.grid(row=7, column=0, sticky="w", columnspan=2)
+            song_streams_lbl.grid(row=8, column=0, sticky="w", columnspan=2)
+
+            self.lb.bind("<<ListboxSelect>>", self.show_song_record)
+
+        elif len(data[0]) == 15:  # grabbing all columns for showing the record.
+            self.album_frame = tk.Frame(self)
+            for rank, one_data in enumerate(data, 1):
+                self.lb.insert(tk.END, "%3d. %s" % (rank, one_data[0]))
+            self.album_name = tk.StringVar()
+            self.artist_name = tk.StringVar()
+            self.album_units = tk.IntVar()
+            self.album_sales = tk.IntVar()
+            self.song_sales = tk.IntVar()
+            self.peak_position = tk.IntVar()
+            self.weeks_on_chart = tk.IntVar()
+            self.top_songs = tk.StringVar()
+            self.song_streams = tk.IntVar()
+            album_name_lbl = tk.Label(self.album_frame, textvariable=self.album_name, font=('Helvetica', 24, 'bold'),
+                                      relief="ridge")
+            artist_name_lbl = tk.Label(self.album_frame, textvariable=self.artist_name, font=('Helvetica', 18, 'bold'),
+                                       relief="ridge")
+            album_units_lbl = tk.Label(self.album_frame, textvariable=self.album_units, font=('Helvetica', 14))
+            album_sales_lbl = tk.Label(self.album_frame, textvariable=self.album_sales, font=('Helvetica', 14))
+            song_sales_lbl = tk.Label(self.album_frame, textvariable=self.song_sales, font=('Helvetica', 14))
+            peak_position_lbl = tk.Label(self.album_frame, textvariable=self.peak_position, font=('Helvetica', 14))
+            weeks_on_chart_lbl = tk.Label(self.album_frame, textvariable=self.weeks_on_chart, font=('Helvetica', 14))
+            top_songs_lbl = tk.Label(self.album_frame, textvariable=self.top_songs, font=('Helvetica', 14), anchor="w")
+            song_streams_lbl = tk.Label(self.album_frame, textvariable=self.song_streams, font=('Helvetica', 14))
+
+            album_name_lbl.grid(row=0, column=1, sticky="n")
+            artist_name_lbl.grid(row=1, column=1)
+            album_units_lbl.grid(row=2, column=0, sticky="w", columnspan=2)
+            album_sales_lbl.grid(row=3, column=0, sticky="w", columnspan=2)
+            song_sales_lbl.grid(row=4, column=0, sticky="w", columnspan=2)
+            peak_position_lbl.grid(row=5, column=0, sticky="w", columnspan=2)
+            weeks_on_chart_lbl.grid(row=6, column=0, sticky="w", columnspan=2)
+            top_songs_lbl.grid(row=7, column=0, sticky="w", columnspan=2)
+            song_streams_lbl.grid(row=8, column=0, sticky="w", columnspan=2)
+
+            self.lb.bind("<<ListboxSelect>>", self.show_album_record)
+
+        elif len(data[0]) == 6:
+            self.artist_frame = tk.Frame(self)
+            for rank, one_data in enumerate(data, 1):
+                self.lb.insert(tk.END, "%3d. %s" % (rank, one_data[0]))
+            self.artist_name = tk.StringVar()
+            self.song_streams = tk.IntVar()
+            self.weeks_on_chart = tk.IntVar()
+            self.top_song = tk.StringVar()
+            self.peak_position = tk.IntVar()
+
+            artist_name_lbl = tk.Label(self.artist_frame, textvariable=self.artist_name, font=('Helvetica', 18, 'bold'),
+                                       relief="ridge")
+            song_streams_lbl = tk.Label(self.artist_frame, textvariable=self.song_streams, font=('Helvetica', 14))
+            weeks_on_chart_lbl = tk.Label(self.artist_frame, textvariable=self.weeks_on_chart, font=('Helvetica', 14))
+            top_song_lbl = tk.Label(self.artist_frame, textvariable=self.top_song, font=('Helvetica', 14), anchor="w")
+            peak_position_lbl = tk.Label(self.artist_frame, textvariable=self.peak_position, font=('Helvetica', 14))
+
+            artist_name_lbl.grid(row=0, column=1, sticky="n")
+            peak_position_lbl.grid(row=5, column=0, sticky="w", columnspan=2)
+            weeks_on_chart_lbl.grid(row=6, column=0, sticky="w", columnspan=2)
+            top_song_lbl.grid(row=7, column=0, sticky="w", columnspan=2)
+            song_streams_lbl.grid(row=8, column=0, sticky="w", columnspan=2)
+
+            self.lb.bind("<<ListboxSelect>>", self.show_artist_record)
+
         s.config(command=self.lb.yview)
-        self.lb.grid(row=1, column=0)
-        s.grid(row=1, column=1, sticky='ns')
-        tk.Label(self).grid(row=2, column=0)
+        self.lb.grid(row=2, column=0)
+        s.grid(row=2, column=1, sticky='ns')
+        tk.Label(self).grid(row=3, column=0)
+
+    def show_album_record(self, event):
+        self.album_frame.grid()
+        selection = self.lb.curselection()[0]
+
+        # loads image from server
+        img_url = self.data[selection][-5]
+        image = Image.open(urllib.request.urlopen(img_url))
+        image = image.resize((100, 100), Image.ANTIALIAS)
+        width, height = image.size
+        image = ImageTk.PhotoImage(image)
+        panel = tk.Label(self.album_frame, image=image, relief="raised")
+        panel.image = image
+        panel.grid(row=0, column=0, sticky="n", rowspan=2)
+
+        top_songs = self.data[selection][7].split(', ')
+        if len(top_songs) != 3:
+            top_songs = None
+
+        # display metrics
+        self.album_name.set(self.data[selection][0])
+        self.artist_name.set(self.data[selection][-3])
+        self.album_units.set("Album units: " + str(self.data[selection][2]))
+        self.album_sales.set("Album sales: " + str(self.data[selection][3]))
+        self.song_sales.set("Song sales: " + str(self.data[selection][4]))
+        self.peak_position.set("Peak position: " + str(self.data[selection][5]))
+        self.weeks_on_chart.set("Weeks on chart: " + str(self.data[selection][6]))
+        if top_songs:
+            self.top_songs.set("Top songs:\n" + top_songs[0] + "\n" + top_songs[1] + "\n" + top_songs[2])
+        else:
+            self.top_songs.set('')
+        self.song_streams.set("Song streams: " + str(self.data[selection][9]))
+
+    def show_song_record(self, event):
+        self.song_frame.grid()
+        selection = self.lb.curselection()[0]
+
+        # loads image from server
+        img_url = self.data[selection][-5]
+        image = Image.open(urllib.request.urlopen(img_url))
+        image = image.resize((100, 100), Image.ANTIALIAS)
+        width, height = image.size
+        image = ImageTk.PhotoImage(image)
+        panel = tk.Label(self.song_frame, image=image, relief="raised")
+        panel.image = image
+        panel.grid(row=0, column=0, sticky="n", rowspan=2)
+
+        top_cities = self.data[selection][5].split('\n')[:-1]
+        if len(top_cities) != 3:
+            top_cities = None
+
+        # display metrics
+        self.song_name.set(self.data[selection][0])
+        self.artist_name.set(self.data[selection][-3])
+        self.label.set("Label: " + str(self.data[selection][-1]))
+        self.peak_position.set("Peak position: " + str(self.data[selection][3]))
+        self.weeks_on_chart.set("Weeks on chart: " + str(self.data[selection][6]))
+        if top_cities:
+            self.top_cities.set("Top cities:\n" + top_cities[0] + "\n" + top_cities[1] + "\n" + top_cities[2])
+        else:
+            self.top_cities.set('')
+        self.song_streams.set("Song streams: " + str(self.data[selection][7]))
+
+    def show_artist_record(self, event):
+        self.artist_frame.grid()
+        selection = self.lb.curselection()[0]
+
+        # loads image from server
+        img_url = self.data[selection][-1]
+        image = Image.open(urllib.request.urlopen(img_url))
+        image = image.resize((100, 100), Image.ANTIALIAS)
+        width, height = image.size
+        image = ImageTk.PhotoImage(image)
+        panel = tk.Label(self.artist_frame, image=image, relief="raised")
+        panel.image = image
+        panel.grid(row=0, column=0, sticky="n", rowspan=2)
+
+        # display metrics
+        self.artist_name.set(self.data[selection][0])
+        self.song_streams.set("Song streams: " + str(self.data[selection][1]))
+        self.weeks_on_chart.set("Weeks on chart: " + str(self.data[selection][2]))
+        self.peak_position.set("Peak position: " + str(self.data[selection][4]))
+        self.top_song.set("Top song: " + str(self.data[selection][3]))
 
 
 class ResultBCWindow(tk.Toplevel):
