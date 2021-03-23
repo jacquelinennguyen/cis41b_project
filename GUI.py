@@ -50,7 +50,7 @@ class MainWindow(tk.Tk):
         self.songs = Song()
         self.artists = Artist()
 
-        rank100_tpl = ("Top 100 Songs", ("Default", "Weeks On Chart", "Song Units"))
+        rank100_tpl = ("Top 100 Songs", ("Default", "Weeks on Chart", "Song Units"))
         rank200_tpl = ("Top 200 Albums", ("Default", "Top Albums of Labels", "Album Sales",
                                           "Song Sales", "Song Streams"))
         rank500_tpl = ("Top 500 Artists", ("Default", "Weeks on Chart", "Song Streams"))
