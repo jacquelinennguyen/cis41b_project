@@ -31,7 +31,7 @@ class MainWindow(tk.Tk):
         #print(d_keys)
         weekChosen = ttk.Combobox(self, width = 27, textvariable = n) 
         weekChosen['values'] = tuple(d_keys)
-        weekChosen.bind("<<ComboboxSelected>>", lambda t : self.update(weekChosen.get()))
+        weekChosen.bind("<<ComboboxSelected>>", lambda : self.update(weekChosen.get()))
         weekChosen.grid(column = 0, row = 5) 
 
         rank100_tpl = ("Top 100 Songs", ("Default", "Weeks On Chart", "Song Units"))
@@ -57,7 +57,6 @@ class MainWindow(tk.Tk):
         print(lastFri)
         # call backendWebScraper with lastFri
         # call updateDB from backendDB
-
 
     def end_program(self):
         """ End the program after closing the connection to a database """
