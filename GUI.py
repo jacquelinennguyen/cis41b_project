@@ -6,39 +6,53 @@ import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import tkinter.messagebox as tkmb
+from datetime import date
+from datetime import datetime
+from dateutil.relativedelta import relativedelta, FR
 from PIL import ImageTk, Image
 import urllib
 import requests
-from backendQuery import Album, Song, Artist
+import threading
+import importlib
 from backendWebScraper import scrape
+from backendQuery import Song, Album, Artist
 from backendDB import updateDB
 from datetime import datetime
 from weeks import getweeks
 from tkinter import ttk
+
+dayToday = date.today().strftime("%d")
+lastFriday = datetime.now() + relativedelta(days=-1, weekday=FR(-2) if dayToday == "Fri" else FR(-1))
+monthLetter = lastFriday.strftime("%b")
+monthNumber = lastFriday.strftime("%m")
+day = lastFriday.strftime("%d")
+year = lastFriday.strftime("%Y")
+
+# thread = threading.Thread(target=backendWebScraper.scrape, args=(year, monthLetter, monthNumber, day,))
+# thread.start()
+# thread.join()
 
 
 class MainWindow(tk.Tk):
     def __init__(self):
         """ Constructor: Set up a main window """
         super().__init__()
+
+        week_select_win = WeekSelectWindow(self)
+        week_select_win.wait_window()
+        self.week_chosen = tk.StringVar()
+        self.week_chosen.set(week_select_win.get_week())
+        self.focus_set()
+
         self.choice_num = None  # Initialize choice_num here to use in other methods.
         self.choice_index = None  # Initialize choice_index here to use in other methods.
         self.title("Rolling Stone Charts")
+
+        self.make_update_thread()
+
         self.albums = Album()
         self.songs = Song()
         self.artists = Artist()
-
-        # DropDown Menu
-        n = tk.StringVar()
-        self.d_weeks = getweeks()
-        d_keys = list(self.d_weeks.keys())
-        d_keys.reverse()
-        # print(d_keys)
-        self.week_chosen = tk.StringVar()
-        weekChosen = ttk.Combobox(self, width=27, textvariable=n)
-        weekChosen['values'] = tuple(d_keys)
-        weekChosen.bind("<<ComboboxSelected>>", lambda t: self.update(weekChosen.get()))
-        weekChosen.grid(column=0, row=5, pady=10)
 
         rank100_tpl = ("Top 100 Songs", ("Default", "Weeks On Chart", "Song Units"))
         rank200_tpl = ("Top 200 Albums", ("Default", "Weeks On Chart", "Album Sales",
@@ -56,23 +70,28 @@ class MainWindow(tk.Tk):
         b2.grid(row=2, column=0)
         b3.grid(row=3, column=0)
         tk.Label(self).grid(row=4, column=0)
+        self.focus_set()
         self.protocol("WM_DELETE_WINDOW", self.end_program)
 
-    def update(self, chosen_week):
-        self.albums.close_conn()
-        self.songs.close_conn()
-        self.artists.close_conn()
-        self.week_chosen.set(chosen_week)
+    def make_update_thread(self):
+        chosen_week = self.week_chosen.get()
         elements = chosen_week.split(' ')
-        monthLetter = elements[0]
-        monthNumber = datetime.strptime(monthLetter, '%b').strftime("%m")
-        day = elements[1][:-1]
-        year = elements[2]
-        scrape(year, monthLetter, monthNumber, day)
-        updateDB()
-        self.albums = Album()
-        self.songs = Song()
-        self.artists = Artist()
+        _monthLetter = elements[0]
+        _monthNumber = datetime.strptime(monthLetter, '%b').strftime("%m")
+        _day = elements[1][:-1]
+        _year = elements[2]
+        update_thread = threading.Thread(target=scrape, args=(_year, _monthLetter, _monthNumber, _day,))
+        update_thread.start()
+        update_thread.join()
+
+    def update(self, chosen_week):
+        elements = chosen_week.split(' ')
+        _monthLetter = elements[0]
+        _monthNumber = datetime.strptime(monthLetter, '%b').strftime("%m")
+        _day = elements[1][:-1]
+        _year = elements[2]
+
+        scrape(_year, _monthLetter, _monthNumber, _day)
 
     def end_program(self):
         """ End the program after closing the connection to a database """
@@ -172,6 +191,35 @@ class MainWindow(tk.Tk):
                         tkmb.showinfo("No Data", "No data: " + ','.join(error_list), parent=self)
                     if len(y_list) > 0:
                         ResultBCWindow(self, rank_tpl[0], x_list, y_list, x_axes, y_axes)
+
+
+class WeekSelectWindow(tk.Toplevel):
+    def __init__(self, master):
+        super().__init__(master)
+        self.focus_set()
+        self.grab_set()
+        self.title("Select Week")
+        n = tk.StringVar()
+        self.d_weeks = getweeks()
+        d_keys = list(self.d_weeks.keys())
+        d_keys.reverse()
+        # print(d_keys)
+        self.week_chosen = tk.StringVar()
+        self.weeks = ttk.Combobox(self, width=27, textvariable=n)
+        self.weeks['values'] = tuple(d_keys)
+        self.weeks.bind("<<ComboboxSelected>>")
+        tk.Label(self, text="Choose a week to see charts for").grid(row=0, column=0)
+        self.weeks.grid(column=0, row=5, pady=10)
+
+        update_button = tk.Button(self, text="Ok", command=self.save_choice)
+        update_button.grid(row=6, column=0)
+
+    def save_choice(self):
+        self.week_chosen.set(self.weeks.get())
+        self.destroy()
+
+    def get_week(self):
+        return self.week_chosen.get()
 
 
 class FilterWindow(tk.Toplevel):

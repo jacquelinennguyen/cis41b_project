@@ -9,11 +9,12 @@ import threading
 from datetime import date
 from datetime import datetime
 from dateutil.relativedelta import relativedelta, FR
+import backendDB
 
 SONG_LIMIT = 100
 ALBUM_LIMIT = 200
 ARTIST_LIMIT = 500
-STEP_AMOUNT = 100
+STEP_AMOUNT = 50
 
 dayToday = date.today().strftime("%d")
 lastFriday = datetime.now() + relativedelta(days=-1, weekday=FR(-2) if dayToday == "Fri" else FR(-1))
@@ -31,18 +32,18 @@ top500Artists = {}
 
 def scrapeSongsChart(yearInput, monthLetterInput, monthNumberInput, dayInput):
     global top100Songs
+    top100Songs = {}
 
     threadsList1 = []
     rvList = []
 
-    threadsList1.append(threading.Thread(target=scrapeFirstSong, args=(rvList, yearInput, monthLetterInput, monthNumberInput, dayInput)))
+    threadsList1.append(threading.Thread(target=scrapeFirstSong, args=(rvList, yearInput, monthLetterInput, monthNumberInput, dayInput,)))
     for startingCount in range(0, SONG_LIMIT - STEP_AMOUNT + 1, STEP_AMOUNT):
-        thread1 = threading.Thread(target=scrapeSongBatch, args=(startingCount, rvList, yearInput, monthLetterInput, monthNumberInput, dayInput))
+        thread1 = threading.Thread(target=scrapeSongBatch, args=(startingCount, rvList, yearInput, monthLetterInput, monthNumberInput, dayInput,))
         threadsList1.append(thread1)
     for thread1 in threadsList1:
         thread1.start()
     for thread1 in threadsList1:
-        print("Joining song inner thread")
         thread1.join()
 
     sortedList = sorted(rvList, key=lambda x: x[0])
@@ -176,18 +177,18 @@ def scrapeSongBatch(counterStart, dataContainer, yearInput, monthLetterInput, mo
 
 def scrapeAlbumsChart(yearInput, monthLetterInput, monthNumberInput, dayInput):
     global top200Albums
+    top200Albums = {}
 
     threadsList2 = []
     rvList = []
 
-    threadsList2.append(threading.Thread(target=scrapeFirstAlbum, args=(rvList, yearInput, monthLetterInput, monthNumberInput, dayInput)))
+    threadsList2.append(threading.Thread(target=scrapeFirstAlbum, args=(rvList, yearInput, monthLetterInput, monthNumberInput, dayInput,)))
     for startingCount in range(0, ALBUM_LIMIT - STEP_AMOUNT + 1, STEP_AMOUNT):
-        thread2 = threading.Thread(target=scrapeAlbumBatch, args=(startingCount, rvList, yearInput, monthLetterInput, monthNumberInput, dayInput))
+        thread2 = threading.Thread(target=scrapeAlbumBatch, args=(startingCount, rvList, yearInput, monthLetterInput, monthNumberInput, dayInput,))
         threadsList2.append(thread2)
     for thread2 in threadsList2:
         thread2.start()
     for thread2 in threadsList2:
-        print("Joining album inner thread")
         thread2.join()
 
     sortedList = sorted(rvList, key=lambda x: x[0])
@@ -365,7 +366,7 @@ def scrapeAlbumBatch(counterStart, dataContainer, yearInput, monthLetterInput, m
                                     "topSongs": topSongs,
                                     "songStreams": songStreams,
                                     "coverImg": coverImg}
-    print("~~reached end of scrapeAlbumBatch")
+
     dataToSendBack = (counterStart, albumDataDict)
     dataContainer.append(dataToSendBack)
 
@@ -374,18 +375,18 @@ def scrapeAlbumBatch(counterStart, dataContainer, yearInput, monthLetterInput, m
 
 def scrapeArtistsChart(yearInput, monthLetterInput, monthNumberInput, dayInput):
     global top500Artists
+    top500Artists = {}
 
     threadsList3 = []
     rvList = []
 
-    threadsList3.append(threading.Thread(target=scrapeFirstArtist, args=(rvList, yearInput, monthLetterInput, monthNumberInput, dayInput)))
+    threadsList3.append(threading.Thread(target=scrapeFirstArtist, args=(rvList, yearInput, monthLetterInput, monthNumberInput, dayInput,)))
     for startingCount in range(0, ARTIST_LIMIT - STEP_AMOUNT + 1, STEP_AMOUNT):
-        thread3 = threading.Thread(target=scrapeArtistsBatch, args=(startingCount, rvList, yearInput, monthLetterInput, monthNumberInput, dayInput))
+        thread3 = threading.Thread(target=scrapeArtistsBatch, args=(startingCount, rvList, yearInput, monthLetterInput, monthNumberInput, dayInput,))
         threadsList3.append(thread3)
     for thread3 in threadsList3:
         thread3.start()
     for thread3 in threadsList3:
-        print("Joining artist inner thread")
         thread3.join()
 
     sortedList = sorted(rvList, key=lambda x: x[0])
@@ -486,7 +487,6 @@ def scrapeArtistsBatch(counterStart, dataContainer, yearInput, monthLetterInput,
                                       "peakPosition": peakPosition,
                                       "coverImg": coverImg}
 
-    print("reached end of scrapeArtistBatch")
     dataToSendBack = (counterStart, artistDataDict)
     dataContainer.append(dataToSendBack)
 
@@ -498,7 +498,7 @@ def scrape(yearInput, monthLetterInput, monthNumberInput, dayInput):
     scrapingFunctions = [scrapeSongsChart, scrapeAlbumsChart, scrapeArtistsChart]
     masterThreadsList = []
     for function in scrapingFunctions:
-        masterThread = threading.Thread(target=function, args=(yearInput, monthLetterInput, monthNumberInput, dayInput))
+        masterThread = threading.Thread(target=function, args=(yearInput, monthLetterInput, monthNumberInput, dayInput,))
         masterThreadsList.append(masterThread)
 
     print("starting timer")
@@ -506,21 +506,14 @@ def scrape(yearInput, monthLetterInput, monthNumberInput, dayInput):
     for masterThread in masterThreadsList:
         masterThread.start()
     for masterThread in masterThreadsList:
-        print("threads started")    # last thread is not ending...
         masterThread.join()
-    print("threads ended")
     totalTime = time.time() - timerStart
     print(f"Time to fetch data: {totalTime:.2f}s")
 
-# in sequence =================================================================
-# timerStart = time.time()
-#
-# scrapeSongsChart()
-# scrapeAlbumsChart()
-# scrapeArtistsChart()
-#
-# totalTime = time.time() - timerStart
-# print(f"Time to fetch data: {totalTime:.2f}s")
+    saveAsJSON()
+    backendDB.updateDB()
 
 
-# scrape(year, monthLetter, monthNumber, day)
+def saveAsJSON():
+    with open('chart_data.json', 'w') as fh:
+        json.dump([top100Songs, top200Albums, top500Artists], fh, indent=4)

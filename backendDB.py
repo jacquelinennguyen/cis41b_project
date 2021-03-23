@@ -6,13 +6,35 @@
 # 2: Top 100 Songs
 # 3: Top 200 Albums
 # 4: Top 500 Artists
-import importlib
-import backendWebScraper
-importlib.reload(backendWebScraper)
-from backendWebScraper import top500Artists, top200Albums, top100Songs
+# import importlib
+# import backendWebScraper
+# importlib.reload(backendWebScraper)
+# from backendWebScraper import top500Artists, top200Albums, top100Songs
 import json
 import sqlite3
 import re
+
+
+top100Songs = {}
+top200Albums = {}
+top500Artists = {}
+
+
+def importFromJSON():
+    global top100Songs
+    global top200Albums
+    global top500Artists
+
+    try:
+        with open('chart_data.json', 'r') as fh:
+            dictList = json.load(fh)
+            top100Songs = dictList[0]
+            top200Albums = dictList[1]
+            top500Artists = dictList[2]
+    except IOError as e:
+        print("Error opening file: " + str(e))
+        raise SystemExit()
+
 
 def genTableArtists(d, conn, cur) :
     '''
@@ -85,8 +107,6 @@ def genTableAlbumsSongs(d1, d2, conn, cur) :
             coverImg TEXT
             )''')
 
-
-
     for k, v in d2.items() :
         artist = v['artist']
         artist = re.sub(r'feat\..*', '', artist).rstrip()
@@ -134,11 +154,33 @@ def genTableAlbumsSongs(d1, d2, conn, cur) :
     
     conn.commit()
 
+
 def updateDB() :
+    importFromJSON()
     conn = sqlite3.connect('rollingstones.db')
     cur = conn.cursor()
     genTableArtists(top500Artists, conn, cur)
     genTableAlbumsSongs(top100Songs, top200Albums, conn, cur)
+
+
+# if __name__ == "__main__":
+#     importFromJSON()
+
+
+# def importFromJSON():
+#     global top100Songs
+#     global top200Albums
+#     global top500Artists
+#
+#     try:
+#         with open('chart_data.json', 'r') as fh:
+#             top100Songs = json.load(fh)
+#             top200Albums = json.load(fh)
+#             top500Artists = json.load(fh)
+#             json.dump(top500Artists, fh, indent=4)
+#     except IOError as e:
+#         print("Error opening file: " + str(e))
+#         raise SystemExit()
 
 # updateDB()
 #print(top100Songs['drivers license'])
