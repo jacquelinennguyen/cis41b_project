@@ -73,42 +73,42 @@ Here we display the top 1 item from each table. (As of Friday, March 19)
 ### More detailed structure
 This is from the Project Proposal
 ```
-|-- Start: Rolling Stone Charts
+|-- Start: Rolling Stones Charts
     |
-    |-- Choice 1: Look at top 200 albums
-    |    |-- Choice 1.1: Default - show by ranking (album units)
-    |    |    |-- Displays the listbox of all the album names in the order of Rolling Stone’s ranking
-    |    |
-    |    |-- Choice 1.2: Sort by record label
-    |    |    |-- Opens another page where the user can select from a list of record labels 
-    |    |         Once they do, a LB will show the top albums within that record label
-    |    |
-    |    |-- Choice 1.3: Sort by album sales
-    |    |    |-- Displays a listbox of album names ranked by the number of album sales
-    |    |
-    |    |-- Choice 1.4: Sort by song sales
-    |    |    |-- Displays a listbox of album names ranked by the number of songs sold
-    |    |
-    |    |-- Choice 1.5: Sort by song streams
-    |    |    |-- Displays a listbox of album names ranked by the number of song streams
-    |
-    |-- Choice 2: look at top 100 songs
-    |    |-- Choice 2.1: Top 100
+    |-- Choice 1: Look at top 100 songs
+    |    |-- Choice 1.1: Default - shows the default ranking, ranked by song units
     |    |    |-- List top 100 songs by rank (song units)
     |    |          
-    |    |-- Choice 2.2: Compare weeks on chart
-    |    |    |-- Compares user selected artists’ weeks on chart in a bar chart
+    |    |-- Choice 1.2: Weeks on Chart - compares the selected songs’ weeks on chart in a bar chart
+    |    |    |-- Compares user selected songs’ weeks on chart in a bar chart
     |    |
-    |    |-- Choice 2.3: Compare sale units
-    |    |    |-- Compares user selected songs sales in a bar chart
+    |    |-- Choice 1.3: Song Units - compares the selected songs’ song units in a bar chart
+    |         |-- Compares user selected songs' sales in a bar chart
     |
-    |-- Choice 3: look at top 500 artists
-        |-- Choice 3.1: By ranking (song streams)
+    |-- Choice 2: Look at top 200 albums
+    |    |-- Choice 2.1: Default - shows the default ranking, ranked by album units
+    |    |    |-- Displays the listbox of all the album names in the order of Rolling Stone’s ranking
+    |    |
+    |    |-- Choice 2.2: Album Sales - shows album names ranked by the number of album sales
+    |    |    |-- Displays a listbox of album names ranked by the number of album sales
+    |    |
+    |    |-- Choice 2.3: Song Sales - shows album names ranked by the number of songs sales
+    |    |    |-- Displays a listbox of album names ranked by the number of songs sales
+    |    |
+    |    |-- Choice 2.4: Song Streams - shows album names ranked by the number of song streams
+    |    |    |-- Displays a listbox of album names ranked by the number of song streams
+    |    |
+    |    |-- Choice 2.5: Top Albums of Labels - shows the top albums within the selected record labels based on album units
+    |         |-- Opens another page where the user can select from a list of record labels 
+    |             Once they do, a LB will show the top albums within that record label
+    |
+    |-- Choice 3: Look at top 500 artists
+        |-- Choice 3.1: Default - shows the default ranking, ranked by song streams
         |    |-- Displays artists names in listbox sorted by ranking (song streams)
         |
-        |-- Choice 3.2: Weeks on chart
+        |-- Choice 3.2: Weeks on Chart - compares the selected artists’ weeks on chart in bar chart
         |    |-- Compares artists’ weeks on chart in bar chart
         |
-        |-- Choice 3.3: By # of streams
+        |-- Choice 3.3: Song Streams - compares the selected artists’ song streams in bar chart
              |-- Compares user-selected artists’ # of streams in bar chart
 ```
