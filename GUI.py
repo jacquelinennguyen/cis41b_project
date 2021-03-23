@@ -1,4 +1,5 @@
 # CIS 41B Final Project: GUI.py - Kaede Hamada
+# (minor edits by Jacqueline Nguyen)
 import matplotlib
 matplotlib.use('TkAgg')
 import tkinter as tk
@@ -6,6 +7,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import tkinter.messagebox as tkmb
 from backendQuery import Album, Song, Artist
+from weeks import getweeks
+
+from tkinter import ttk
 
 
 class MainWindow(tk.Tk):
@@ -18,6 +22,13 @@ class MainWindow(tk.Tk):
         self.albums = Album()
         self.songs = Song()
         self.artists = Artist()
+
+        # DropDown Menu 
+        n = tk.StringVar() 
+        weekChosen = ttk.Combobox(self, width = 27, textvariable = n) 
+        weekChosen['values'] = tuple(getweeks().keys()) 
+        weekChosen.grid(column = 0, row = 5) 
+
         rank100_tpl = ("Top 100 Songs", ("Default", "Weeks On Chart", "Song Units"))
         rank200_tpl = ("Top 200 Albums", ("Default", "Weeks On Chart", "Album Sales",
                                           "Song Sales", "Song Streams"))

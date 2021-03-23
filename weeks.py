@@ -1,5 +1,6 @@
 # Jacqueline Nguyen
 # getweeks will return a dictionary with all the date ranges and fridays from that date range
+
 import pandas as pd
 import datetime
 from datetime import date
@@ -25,7 +26,11 @@ def timerange(friday) :
     s = f'{fri_str} - {thur_str}'
     return s
 
-def getweeks(max_date) :
+def getweeks(max_date=MAX_DATE) :
+    '''
+    USE THIS FUNCTION !!!
+    Gets all of the dates and date ranges in a dictionary.
+    '''
     d = {}
     for friday in allfridays(max_date) :
         d[timerange(friday)] = friday
