@@ -6,11 +6,16 @@
 # 2: Top 100 Songs
 # 3: Top 200 Albums
 # 4: Top 500 Artists
-
+import importlib
+import backendWebScraper
+importlib.reload(backendWebScraper)
 from backendWebScraper import top500Artists, top200Albums, top100Songs
 import json
 import sqlite3
 import re
+import threading
+
+lock = threading.Lock()
 
 def genTableArtists(d, conn, cur) :
     '''
@@ -98,7 +103,7 @@ def genTableAlbumsSongs(d1, d2, conn, cur) :
         #print(k)
         topSongs = v['topSongs']
         topSongs = ", ".join(topSongs)
-        print(k)
+        # print(k)
         cur.execute('''INSERT INTO AlbumsDB
                 (name, artistId, albumUnits, albumSales, songSales, 
                 peakPosition, weeksOnChart, labelId, topSongs, songStreams, coverImg) 
@@ -133,10 +138,14 @@ def genTableAlbumsSongs(d1, d2, conn, cur) :
     conn.commit()
 
 def updateDB() :
+    #lock.acquire()
     conn = sqlite3.connect('rollingstones.db')
     cur = conn.cursor()
+    #print(list(top100Songs.keys())[:10])
     genTableArtists(top500Artists, conn, cur)
     genTableAlbumsSongs(top100Songs, top200Albums, conn, cur)
+    conn.close()
+    #lock.release()
 
 # updateDB()
 #print(top100Songs['drivers license'])
