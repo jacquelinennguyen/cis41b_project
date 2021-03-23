@@ -42,7 +42,7 @@ class MainWindow(tk.Tk):
         weekChosen.grid(column=0, row=5, pady=10)
         
         tk.Button(self, text="Set Week", command=self.update).grid(column=1, row=5)
-        '''
+        
         rank100_tpl = ("Top 100 Songs", ("Default", "Weeks On Chart", "Song Units"))
         rank200_tpl = ("Top 200 Albums", ("Default", "Weeks On Chart", "Album Sales",
                                           "Song Sales", "Song Streams"))
@@ -58,7 +58,7 @@ class MainWindow(tk.Tk):
         b1.grid(row=1, column=0)
         b2.grid(row=2, column=0)
         b3.grid(row=3, column=0)
-        '''
+        
         tk.Label(self).grid(row=4, column=0)
         self.protocol("WM_DELETE_WINDOW", self.end_program)
 
