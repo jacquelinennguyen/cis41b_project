@@ -27,9 +27,15 @@ class Album(Chart) :
         (AlbumName, AlbumArtist, AlbumUnits)
         '''
         L = []
-        for t in self.cur.execute('''SELECT AlbumsDB.name, Names.name, AlbumsDB.albumUnits 
+        # for t in self.cur.execute('''SELECT AlbumsDB.name, Names.name, AlbumsDB.albumUnits
+        #                         FROM AlbumsDB JOIN Names ON AlbumsDB.artistId = Names.id
+        #                         AND Names.id = AlbumsDB.artistId''') :
+        #     L.append(t)
+        for t in self.cur.execute('''SELECT * 
                                 FROM AlbumsDB JOIN Names ON AlbumsDB.artistId = Names.id
-                                AND Names.id = AlbumsDB.artistId''') :
+                                JOIN Labels ON AlbumsDB.labelId = Labels.id
+                                AND Names.id = AlbumsDB.artistId
+                                AND Labels.id = AlbumsDB.labelId''') :
             L.append(t)
         return L
 
@@ -115,10 +121,16 @@ class Song(Chart) :
         (SongName, ArtistName, Units)
         '''
         L = []
-        for t in self.cur.execute('''SELECT SongsDB.name, Names.name, SongsDB.unitsTrend
+        # for t in self.cur.execute('''SELECT SongsDB.name, Names.name, SongsDB.unitsTrend
+        #                         FROM SongsDB JOIN Names ON SongsDB.artistId = Names.id
+        #                         AND Names.id = SongsDB.artistId''') :
+        #     L.append((t[0], t[1], int(t[2].split(',')[-1].replace(']',''))))
+        for t in self.cur.execute('''SELECT * 
                                 FROM SongsDB JOIN Names ON SongsDB.artistId = Names.id
-                                AND Names.id = SongsDB.artistId''') :
-            L.append((t[0], t[1], int(t[2].split(',')[-1].replace(']',''))))
+                                JOIN Labels ON SongsDB.labelId = Labels.id
+                                AND Names.id = SongsDB.artistId
+                                AND Labels.id = SongsDB.labelId''') :
+            L.append(t)
         return L
 
     def allSongs(self):
@@ -161,8 +173,10 @@ class Artist(Chart) :
         returns the names of the Top 500 Artists (default) (ArtistName, Streams)
         '''
         L = []
-        for t in self.cur.execute('''SELECT name, songStreams FROM ArtistsDB
-                                    ORDER BY songStreams DESC''') :
+        # for t in self.cur.execute('''SELECT name, songStreams FROM ArtistsDB
+        #                             ORDER BY songStreams DESC''') :
+        #     L.append(t)
+        for t in self.cur.execute('''SELECT * FROM ArtistsDB''') :
             L.append(t)
         return L
 

@@ -6,7 +6,9 @@
 # 2: Top 100 Songs
 # 3: Top 200 Albums
 # 4: Top 500 Artists
-
+import importlib
+import backendWebScraper
+importlib.reload(backendWebScraper)
 from backendWebScraper import top500Artists, top200Albums, top100Songs
 import json
 import sqlite3
@@ -98,7 +100,7 @@ def genTableAlbumsSongs(d1, d2, conn, cur) :
         #print(k)
         topSongs = v['topSongs']
         topSongs = ", ".join(topSongs)
-        print(k)
+        # print(k)
         cur.execute('''INSERT INTO AlbumsDB
                 (name, artistId, albumUnits, albumSales, songSales, 
                 peakPosition, weeksOnChart, labelId, topSongs, songStreams, coverImg) 
